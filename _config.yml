@@ -22,6 +22,7 @@ exclude:
   - vendor/cache/
   - vendor/gems/
   - vendor/ruby/
+  - .github/
 
 # Collections
 collections:
@@ -36,5 +37,3 @@ defaults:
       type: "posts"
     values:
       layout: "post"
-
-# Mermaid support (via include)
