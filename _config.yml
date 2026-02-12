@@ -11,18 +11,6 @@ plugins:
   - jekyll-feed
   - kramdown-parser-gfm
 
-# Ensure index.md uses article layout
-defaults:
-  - scope:
-      path: ""
-      values:
-      layout: "article"
-  - scope:
-      path: ""
-      type: "posts"
-    values:
-      layout: "article"
-
 # Exclude from processing
 exclude:
   - .sass-cache/
@@ -49,4 +37,8 @@ defaults:
       path: ""
       type: "posts"
     values:
-      layout: "post"
+      layout: "article"
+  - scope:
+      path: ""
+    values:
+      layout: "article"
