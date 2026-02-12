@@ -2,140 +2,488 @@
 layout: default
 ---
 
+<style>
+  /* Homepage-specific Styles */
+  .hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+    padding: 80px 24px 60px;
+    text-align: center;
+    color: white;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+  }
+
+  .hero-badge-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0 0 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-subtitle {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0 auto 32px;
+    max-width: 580px;
+    opacity: 0.95;
+  }
+
+  .hero-cta {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-primary {
+    background: white;
+    color: var(--accent);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .btn-secondary svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Featured Guide Section */
+  .featured-section {
+    padding: 64px 24px;
+    background: var(--bg-primary);
+  }
+
+  .featured-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .featured-section h2 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .featured-link {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .featured-link:hover {
+    text-decoration: underline;
+  }
+
+  .featured-guide {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .guide-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+  }
+
+  .guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+
+  .guide-cover {
+    height: 200px;
+    background: linear-gradient(135deg, #3269d8 0%, #103855 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .guide-icon {
+    font-family: var(--font-sans);
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .guide-info {
+    padding: 32px;
+  }
+
+  .guide-info h3 {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--text-primary);
+  }
+
+  .guide-excerpt {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+  }
+
+  .guide-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .guide-date,
+  .guide-time,
+  .guide-tag {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .guide-tag {
+    padding: 4px 12px;
+    background: var(--accent);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .guide-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    margin-top: 16px;
+  }
+
+  .guide-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Topics Grid Section */
+  .topics-section {
+    padding: 48px 24px;
+    background: var(--bg-secondary);
+  }
+
+  .topics-section h2 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0 0 40px;
+  }
+
+  .topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .topic-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    display: block;
+  }
+
+  .topic-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+
+  .topic-card.placeholder {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .topic-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .topic-card h4 {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--text-primary);
+  }
+
+  .topic-card p {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Subscribe Section */
+  .subscribe-hero {
+    padding: 64px 24px;
+    background: var(--bg-primary);
+    text-align: center;
+  }
+
+  .subscribe-content h2 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px;
+  }
+
+  .subscribe-content p {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0 0 24px;
+  }
+
+  .subscribe-form-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .subscribe-form-large input {
+    width: 100%;
+    padding: 14px 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-family: var(--font-sans);
+  }
+
+  .subscribe-form-large button {
+    width: 100%;
+    padding: 14px 28px;
+    background: var(--gradient-hero);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .subscribe-form-large button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+
+  .subscribe-terms {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding: 48px 20px;
+    }
+
+    .hero-title {
+      font-size: 32px;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+    }
+
+    .featured-guide {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-cover {
+      height: 160px;
+    }
+
+    .guide-info {
+      padding: 24px;
+    }
+
+    .topics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .subscribe-hero {
+      padding: 40px 20px;
+    }
+  }
+</style>
+
 <!-- Hero Section -->
 <section class="hero">
-  <div class="hero-badge">
-    <span class="hero-badge-dot"></span>
-    New post every week
-  </div>
-  <h1 class="hero-title">DevOps & Kubernetes<br>for the modern engineer</h1>
-  <p class="hero-subtitle">Practical guides, tutorials, and insights from a production engineer navigating the cloud-native landscape.</p>
-
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-      </svg>
-      {{ site.posts | size }} Articles
-    </div>
-    <div class="hero-stat">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-      </svg>
-      Kubernetes Focus
-    </div>
-    <div class="hero-stat">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      Production Ready
-    </div>
-  </div>
+  <h1 class="hero-title">Technical Guides & Tutorials</h1>
+  <p class="hero-subtitle">Deep dives into software engineering, cloud infrastructure, and development best practices.</p>
 
   <div class="hero-cta">
     <a href="/kubernetes-guide/" class="btn-primary">
       Start Reading
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M5 12h14M12 5l7 7-7"/>
+        <path d="M5 12h14M12 5l7 7"/>
       </svg>
     </a>
     <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="btn-secondary">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84-1.235 1.911-1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        <path d="M12 0c-6.627 0-12 5.373 12 12 5.302 3.438 9.899 5.84 5.84a3.378 3.378 3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378-3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378-3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378z"/>
       </svg>
       GitHub
     </a>
   </div>
 </section>
 
-{% include subscribe.html %}
-
-<!-- Featured Post -->
-{% if site.posts.first %}
-<section class="featured-section container">
-  <div class="section-header">
-    <h2 class="section-title">Featured</h2>
-    <a href="/archive/" class="section-link">View all →</a>
+<!-- Featured Kubernetes Guide -->
+<section class="featured-section">
+  <div class="featured-header">
+    <h2 class="featured-section-title">Featured Complete Guide</h2>
   </div>
-  <a href="{{ site.posts.first.url }}" class="featured-card" style="text-decoration: none;">
-    <div class="featured-image">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <circle cx="12" cy="12" r="8"/>
-        <path d="M12 8v8M8 12h8"/>
-      </svg>
-    </div>
-    <div class="featured-content">
-      {% if site.posts.first.tags %}
-      <span class="featured-tag">
-        {{ site.posts.first.tags | first }}
-      </span>
-      {% endif %}
-      <span class="featured-meta">
-        {% if site.posts.first.date %}
-          {{ site.posts.first.date | date: "%b %-d, %Y" }}
-          {% if site.posts.first.reading_time %}
-            · {{ site.posts.first.reading_time }} min read
-          {% endif %}
-        {% endif %}
-      </span>
-      <h2>{{ site.posts.first.title }}</h2>
-      {% if site.posts.first.excerpt %}
-      <p class="featured-excerpt">{{ site.posts.first.excerpt }}</p>
-      {% endif %}
-    </div>
-  </a>
+
+  <div class="featured-guide">
+    <a href="/kubernetes-guide/" class="guide-card">
+      <div class="guide-cover">
+        <div class="guide-icon">K8s</div>
+      </div>
+      <div class="guide-info">
+        <h3>Kubernetes Explained: What Really Happens Under The Hood</h3>
+        <p class="guide-excerpt">A complete guide covering architecture, pods, services, networking, security, storage, autoscaling, and scheduling. 15,000 words of production-ready knowledge.</p>
+        <div class="guide-meta">
+          <span class="guide-date">Feb 2025</span>
+          <span class="guide-time">75 min read</span>
+          <span class="guide-tag">Complete Guide</span>
+        </div>
+        <span class="guide-link">Read Complete Guide →</span>
+      </div>
+    </a>
+  </div>
 </section>
-{% endif %}
 
-<!-- Recent Posts Grid -->
-<section class="blog-section container">
-  <div class="section-header">
-    <h2 class="section-title">Recent Articles</h2>
+<!-- Topics Grid -->
+<section class="topics-section">
+  <h2>Browse by Topic</h2>
+  <div class="topics-grid">
+    <a href="/kubernetes-guide/" class="topic-card">
+      <div class="topic-icon">🎯</div>
+      <h4>Kubernetes</h4>
+      <p>Complete guide from basics to production</p>
+    </a>
+
+    <!-- Future topics - placeholder -->
+    <a href="#" class="topic-card topic-card--placeholder">
+      <div class="topic-icon">🐳</div>
+      <h4>Docker</h4>
+      <p>Container deep-dives coming soon</p>
+    </a>
+
+    <a href="#" class="topic-card topic-card--placeholder">
+      <div class="topic-icon">☁️</div>
+      <h4>Cloud</h4>
+      <p>AWS, GCP, Azure patterns and guides</p>
+    </a>
+
+    <a href="#" class="topic-card topic-card--placeholder">
+      <div class="topic-icon">🔧</div>
+      <h4>DevOps</h4>
+      <p>CI/CD, pipelines, automation</p>
+    </a>
   </div>
-  <div class="blog-grid">
-    {% for post in site.posts limit:6 %}
-      <a href="{{ post.url }}" class="blog-card">
-        <div class="blog-card-image">
-          {% if post.icon %}
-            <div class="blog-card-icon">{{ post.icon }}</div>
-          {% elsif post.category %}
-            <div class="blog-card-icon">{{ post.category | slice: 0 | upcase }}</div>
-          {% else %}
-            <div class="blog-card-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2"/>
-                <line x1="7" y1="10" x2="11" y2="10"/>
-                <line x1="7" y1="14" x2="17" y2="14"/>
-              </svg>
-            </div>
-          {% endif %}
-        </div>
-        <h3 class="blog-card-title">{{ post.title }}</h3>
-        {% if post.excerpt %}
-        <p class="blog-card-excerpt">{{ post.excerpt }}</p>
-        {% endif %}
-        <div class="blog-card-meta">
-          <span class="blog-card-date">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="7" y1="10" x2="11" y2="10"/>
-              <line x1="7" y1="14" x2="17" y2="14"/>
-            </svg>
-            {% if post.date %}{{ post.date | date: "%b %-d, %Y" }}{% else %}Coming Soon{% endif %}
-          </span>
-          {% if post.tag %}
-          <span class="blog-card-tag">{{ post.tag }}</span>
-          {% elsif post.tags %}
-            {% for tag in post.tags limit:1 %}
-              <span class="blog-card-tag">{{ tag }}</span>
-            {% endfor %}
-          {% endif %}
-        </div>
-      </a>
-    {% endfor %}
+</section>
+
+<!-- Subscribe Section -->
+<section class="subscribe-hero">
+  <div class="subscribe-content">
+    <h2>Stay Updated</h2>
+    <p>Get new guides and tutorials delivered to your inbox weekly.</p>
+    <form class="subscribe-form-large" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
+      <input type="email" placeholder="your@email.com" required>
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="subscribe-terms">By subscribing, you agree to receive emails. Unsubscribe anytime.</p>
   </div>
 </section>
