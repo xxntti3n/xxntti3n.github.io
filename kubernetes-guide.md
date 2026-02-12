@@ -618,7 +618,7 @@ spec:
 
 Taints repel pods. Tolerations allow pods to be scheduled on tainted nodes.
 
-```bash
+```yaml
 # Taint a node for GPU workloads only
 kubectl taint nodes node-1 gpu=true:NoSchedule
 ```
