@@ -9,6 +9,7 @@ markdown: kramdown
 theme: minima
 plugins:
   - jekyll-feed
+  - kramdown-parser-gfm
 
 # Exclude from processing
 exclude:
