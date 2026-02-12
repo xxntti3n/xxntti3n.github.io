@@ -6,7 +6,7 @@ date: 2025-02-11
 
 <header class="article-header">
   <h1 class="article-title">Kubernetes Explained: What Really Happens Under the Hood</h1>
-  <p class="article-subtitle">A complete guide to understanding Kubernetes — from the basics to production-ready patterns</p>
+  <p class="article-subtitle">A complete guide to understanding Kubernetes — from basics to production-ready patterns</p>
   <div class="article-meta">
     <div class="article-author">
       <div class="author-avatar">DN</div>
@@ -26,7 +26,7 @@ Kubernetes is packed with features and an architecture that feels simple on the 
 
 This guide is your complete roadmap to understanding Kubernetes — from the basics to production-ready patterns.
 
----
+***
 
 ## Part 1: The Architecture - Understanding the Control Plane
 
@@ -36,7 +36,8 @@ Before we deploy anything, we need to understand what's actually running under t
 
 Think of Kubernetes as an operating system for your datacenter. Just as your laptop's OS manages processes, networking, and storage on a single machine, Kubernetes manages these across an entire fleet of servers.
 
-```
+<div class="ascii-art">
+<pre>
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         Kubernetes Cluster                              │
 │                                                                       │
@@ -73,7 +74,8 @@ Think of Kubernetes as an operating system for your datacenter. Just as your lap
 │                                                   │              │
 │                                                   └── Network ────┘
 └─────────────────────────────────────────────────────────────────────────────┘
-```
+</pre>
+</div>
 
 ### The Control Plane Components
 
@@ -81,14 +83,12 @@ Think of Kubernetes as an operating system for your datacenter. Just as your lap
 
 Every interaction with Kubernetes goes through the API Server. It's the only component that talks to etcd directly. When you run `kubectl get pods`, you're actually making an HTTP request to the API Server.
 
-```bash
-# What kubectl really does under the hood
+<pre><code class="language-bash"># What kubectl really does under the hood
 kubectl get pods
 # ↓
 # GET /api/v1/namespaces/default/pods
 # Host: kubernetes.default.svc
-# Authorization: Bearer <service-account-token>
-```
+# Authorization: Bearer &lt;service-account-token&gt;</code></pre>
 
 The API Server validates, authenticates, and then stores your request in etcd. It's stateless — you can run multiple instances behind a load balancer.
 
@@ -96,14 +96,12 @@ The API Server validates, authenticates, and then stores your request in etcd. I
 
 etcd is a distributed key-value store. Every Kubernetes object — every pod, service, config map — exists as a key-value pair in etcd.
 
-```
-/registry/pods/default/nginx-abc123 → {
+<pre><code class="language-yaml">/registry/pods/default/nginx-abc123 → {
   "apiVersion": "v1",
   "kind": "Pod",
   "metadata": { "name": "nginx-abc123", ... },
   "spec": { "containers": [...], ... }
-}
-```
+}</code></pre>
 
 > 💡 **Why etcd matters**: When a node fails and all its pods die, the Controller Manager watches etcd for "missing" pods and schedules replacements. The entire self-healing mechanism depends on etcd's consistency guarantees.
 
@@ -118,8 +116,7 @@ The scoring algorithm considers:
 - **Taints and tolerations**: Is this node allowed to run this pod?
 - **Pod disruption budget**: Would scheduling here violate availability constraints?
 
-```yaml
-# Example: How scheduler thinks
+<pre><code class="language-yaml"># Example: How scheduler thinks
 apiVersion: v1
 kind: Pod
 spec:
@@ -136,20 +133,17 @@ spec:
     - key: "dedicated"
       operator: "Equal"
       value: "database"
-      effect: "NoSchedule"
-```
+      effect: "NoSchedule"</code></pre>
 
 #### Controller Manager - The Reconciler
 
 Kubernetes works on a **reconciliation loop** model. The Controller Manager continuously watches the desired state (your YAML) and the actual state (etcd), and makes them match.
 
-```
-while true:
+<pre><code class="language-python">while true:
     desired_state = get_from_etcd()
     actual_state = query_cluster()
     if desired_state != actual_state:
-        reconcile(desired_state, actual_state)
-```
+        reconcile(desired_state, actual_state)</code></pre>
 
 Common controllers:
 
@@ -158,7 +152,7 @@ Common controllers:
 - **Namespace Controller**: Cleans up resources when namespaces delete
 - **Service Account Controller**: Creates default service accounts
 
----
+***
 
 ## Part 2: The Pod - Kubernetes's Atomic Unit
 
@@ -170,7 +164,8 @@ A pod is NOT a container. A pod is a group of containers that share:
 
 ### Single Container Pod (99% of cases)
 
-```
+<div class="ascii-art">
+<pre>
 ┌─────────────────────────────────────────────────────────┐
 │                      Pod                             │
 │  IP: 10.244.1.5                                  │
@@ -190,7 +185,8 @@ A pod is NOT a container. A pod is a group of containers that share:
 │                                                     │
 │  Pause container (network namespace holder)              │
 └─────────────────────────────────────────────────────────┘
-```
+</pre>
+</div>
 
 The `pause` container is the secret sauce. It holds the network namespace so your app container can restart without losing its IP.
 
@@ -198,8 +194,7 @@ The `pause` container is the secret sauce. It holds the network namespace so you
 
 This is where Kubernetes gets interesting. Sidecars let you extend functionality without modifying the main container.
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: Pod
 metadata:
   name: webapp-with-logging
@@ -220,19 +215,17 @@ spec:
 
   volumes:
     - name: logs
-      emptyDir: {}
-```
+      emptyDir: {}</code></pre>
 
 **Why this matters**: Your app writes logs to `/var/log/app`, and fluentd ships them to Elasticsearch — all without touching your app code.
 
----
+***
 
 ## Part 3: Deployment - Managing Pods at Scale
 
 You rarely create pods directly. Instead, you use Deployments — which manage ReplicaSets — which manage Pods. It's controllers all the way down.
 
-```yaml
-apiVersion: apps/v1
+<pre><code class="language-yaml">apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
@@ -250,14 +243,14 @@ spec:
       - name: nginx
         image: nginx:1.25
         ports:
-        - containerPort: 80
-```
+        - containerPort: 80</code></pre>
 
 ### The Rolling Update Dance
 
 When you update the image from `nginx:1.25` to `nginx:1.26`:
 
-```
+<div class="ascii-art">
+<pre>
 Old ReplicaSet (nginx:1.25)        New ReplicaSet (nginx:1.26)
 ┌──────────────┐                   ┌──────────────┐
 │ Pod-A        │ ───┐              │              │
@@ -272,14 +265,14 @@ Old ReplicaSet (nginx:1.25)        New ReplicaSet (nginx:1.26)
                                        │
                                        ▼
                                     (100% - old deleted)
-```
+</pre>
+</div>
 
 The Deployment controller gradually shifts traffic from old pods to new pods. If health checks fail, it pauses — giving you time to rollback.
 
 ### Health Checks Are Critical
 
-```yaml
-spec:
+<pre><code class="language-yaml">spec:
   containers:
   - name: app
     image: myapp:latest
@@ -294,12 +287,11 @@ spec:
         path: /ready
         port: 8080
       initialDelaySeconds: 5
-      periodSeconds: 5
-```
+      periodSeconds: 5</code></pre>
 
 > 💡 **The difference**: `livenessProbe` restarts containers that hang. `readinessProbe` temporarily removes pods from service rotation if they're not ready to handle traffic.
 
----
+***
 
 ## Part 4: Services - Stable Networking
 
@@ -307,17 +299,18 @@ Pods are ephemeral. Their IPs change when they restart. Services provide stable 
 
 ### ClusterIP - The Default
 
-```
+<div class="ascii-art">
+<pre>
         Service (stable IP: 10.96.0.100)
                  │
         ┌────────┴────────┐
         │                 │
     Pod-A (10.244.1.5)  Pod-B (10.244.2.8)
     IP changes...       IP changes...
-```
+</pre>
+</div>
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: Service
 metadata:
   name: web-service
@@ -327,12 +320,12 @@ spec:
   ports:
   - port: 80
     targetPort: 8080
-  type: ClusterIP
-```
+  type: ClusterIP</code></pre>
 
 ### NodePort - For Development
 
-```
+<div class="ascii-art">
+<pre>
 External Traffic (Node IP:30234)
          │
     ┌────┴────┐
@@ -340,13 +333,14 @@ External Traffic (Node IP:30234)
     │ Node 2  │ ──▶ Pod (if exists)
     │ Node 3  │ ──▶ Pod (if exists)
     └─────────┘
-```
+</pre>
+</div>
 
 ### LoadBalancer - For Production
 
 Provisions a cloud load balancer (GCP, AWS, Azure) that forwards to all nodes.
 
----
+***
 
 ## Part 5: ConfigMap and Secret - Configuration
 
@@ -354,50 +348,43 @@ Never hardcode configuration. Use ConfigMaps for non-sensitive data, Secrets for
 
 ### ConfigMap
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
 data:
   database_url: "postgres://db:5432/mydb"
-  cache_ttl: "300"
-```
+  cache_ttl: "300"</code></pre>
 
 ### Using it as Environment Variables
 
-```yaml
-spec:
+<pre><code class="language-yaml">spec:
   containers:
   - name: app
     image: myapp:latest
     envFrom:
     - configMapRef:
-        name: app-config
-```
+        name: app-config</code></pre>
 
 ### Secret - Encrypted at Rest
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: Secret
 metadata:
   name: db-secret
 type: Opaque
 data:
-  password: cGFzc3dvcmQxMjM=  # base64 encoded
-```
+  password: cGFzc3dvcmQxMjM=  # base64 encoded</code></pre>
 
 > ⚠️ **Security note**: Base64 is encoding, not encryption. Kubernetes encrypts Secrets at rest in etcd, but you should also enable RBAC and consider external secret management (Vault, AWS Secrets Manager).
 
----
+***
 
 ## Part 6: Ingress - HTTP Routing
 
 Services operate at Layer 4 (TCP/UDP). Ingress operates at Layer 7 (HTTP).
 
-```yaml
-apiVersion: networking.k8s.io/v1
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: web-ingress
@@ -414,14 +401,13 @@ spec:
           service:
             name: web-service
             port:
-              number: 80
-```
+              number: 80</code></pre>
 
 **Flow**: User → Cloud Load Balancer → Ingress Controller → Service → Pod
 
 Popular ingress controllers: NGINX, Traefik, HAProxy, AWS ALB Ingress.
 
----
+***
 
 ## Part 7: StatefulSet - For Databases
 
@@ -433,8 +419,7 @@ This matters for databases because:
 - Pods are created/deleted in order
 - Each pod has a stable network identity
 
-```yaml
-apiVersion: apps/v1
+<pre><code class="language-yaml">apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mysql
@@ -450,18 +435,18 @@ spec:
       accessModes: ["ReadWriteOnce"]
       resources:
         requests:
-          storage: 10Gi
-```
+          storage: 10Gi</code></pre>
 
 > 💡 **Production tip**: Don't run databases in Kubernetes unless you have to. Use managed services (RDS, Cloud SQL) when possible.
 
----
+***
 
 ## Part 8: Storage - PV, PVC, StorageClass
 
 Kubernetes abstracts storage with three layers:
 
-```
+<div class="ascii-art">
+<pre>
 StorageClass (provisioner: aws-ebs)
        │
        ▼
@@ -472,12 +457,12 @@ PersistentVolume (actual disk)
        │
        ▼
    Pod (mounts PVC)
-```
+</pre>
+</div>
 
 ### StorageClass - Dynamic Provisioning
 
-```yaml
-apiVersion: storage.k8s.io/v1
+<pre><code class="language-yaml">apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: fast-ssd
@@ -486,13 +471,11 @@ parameters:
   type: gp3
   iops: "3000"
   throughput: "125"
-allowVolumeExpansion: true
-```
+allowVolumeExpansion: true</code></pre>
 
 ### PVC - Requesting Storage
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: data-pvc
@@ -502,17 +485,15 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi
-```
+      storage: 20Gi</code></pre>
 
----
+***
 
 ## Part 9: HPA - Auto-scaling
 
 Horizontal Pod Autoscaler scales pods based on metrics.
 
-```yaml
-apiVersion: autoscaling/v2
+<pre><code class="language-yaml">apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: web-hpa
@@ -529,30 +510,26 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
-```
+        averageUtilization: 70</code></pre>
 
 > 💡 **How it works**: The metrics-server scrapes resource usage from Kubelet. HPA queries the metrics API and adjusts the replicas field on your Deployment.
 
----
+***
 
 ## Part 10: RBAC - Access Control
 
 RBAC is critically important for production clusters.
 
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
+<pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: production
 rules:
 - apiGroups: [""]
   resources: ["pods", "services"]
-  verbs: ["get", "list", "watch"]
-```
+  verbs: ["get", "list", "watch"]</code></pre>
 
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
+<pre><code class="language-yaml">apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: developer-read
@@ -564,33 +541,29 @@ subjects:
 roleRef:
   kind: Role
   name: developer-role
-  apiGroup: rbac.authorization.k8s.io
-```
+  apiGroup: rbac.authorization.k8s.io</code></pre>
 
 > ⚠️ **Security tip**: Use `ClusterRole` sparingly. Prefer namespaced `Role` whenever possible. Regularly audit `ClusterRoleBindings`.
 
----
+***
 
 ## Part 11: Network Policy - Traffic Control
 
 By default, Kubernetes allows all traffic. Network policies restrict it.
 
-```yaml
-apiVersion: networking.k8s.io/v1
-kind:NetworkPolicy
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
 metadata:
   name: deny-all
 spec:
   podSelector: {}
   policyTypes:
   - Ingress
-  - Egress
-```
+  - Egress</code></pre>
 
 This denies all traffic. Then you allow what you need:
 
-```yaml
-apiVersion: networking.k8s.io/v1
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-web-to-db
@@ -607,24 +580,20 @@ spec:
           app: web
     ports:
     - protocol: TCP
-      port: 5432
-```
+      port: 5432</code></pre>
 
 > 💡 **Requires**: A CNI that supports network policies (Calico, Cilium, Weave).
 
----
+***
 
 ## Part 12: Taints and Tolerations - Scheduling Control
 
 Taints repel pods. Tolerations allow pods to be scheduled on tainted nodes.
 
-```bash
-# Taint a node for GPU workloads only
-kubectl taint nodes node-1 gpu=true:NoSchedule
-```
+<pre><code class="language-bash"># Taint a node for GPU workloads only
+kubectl taint nodes node-1 gpu=true:NoSchedule</code></pre>
 
-```yaml
-apiVersion: v1
+<pre><code class="language-yaml">apiVersion: v1
 kind: Pod
 spec:
   tolerations:
@@ -634,8 +603,7 @@ spec:
     effect: "NoSchedule"
   containers:
   - name: cuda-app
-    image: cuda-app:latest
-```
+    image: cuda-app:latest</code></pre>
 
 **Use cases**:
 
@@ -644,14 +612,13 @@ spec:
 - Nodes with special hardware
 - Temporary exclusion during maintenance
 
----
+***
 
 ## Putting It All Together - A Complete Example
 
 Here's a complete web application stack:
 
-```yaml
----
+<pre><code class="language-yaml">---
 # ConfigMap
 apiVersion: v1
 kind: ConfigMap
@@ -759,10 +726,9 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
-```
+        averageUtilization: 70</code></pre>
 
----
+***
 
 ## Best Practices Summary
 
@@ -774,10 +740,10 @@ spec:
 6. **Use labels consistently** — enables organized querying
 7. **Set up HPA** — automatic scaling
 8. **Use Probes for health checks** — enables self-healing
-9. **Secure your etcd** — the source of truth
+9. **Secure your etcd** — source of truth
 10. **Monitor everything** — Prometheus + Grafana
 
----
+***
 
 ## Learning Path
 
@@ -795,7 +761,7 @@ I recommend learning these concepts in order:
 10. **NetworkPolicy** — Traffic control
 11. **Taints/Tolerations** — Scheduling
 
----
+***
 
 ## Final Thoughts
 
@@ -805,7 +771,7 @@ Start simple. Deploy a pod. Then a deployment. Then a service. Add ingress. Then
 
 Don't try to learn everything at once. Kubernetes is a marathon, not a sprint.
 
----
+***
 
 *This guide covers the fundamentals. For hands-on practice, I recommend minikube or kind for local development.*
 
