@@ -1,0 +1,27 @@
+<section class="subscribe-section">
+  <div class="subscribe-container">
+    <div class="subscribe-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 5.5 5h13C20 5 22 7 22 9.5V17z"/>
+        <path d="M22 9.5l-10 7L2 9.5"/>
+      </svg>
+      Weekly DevOps Insights
+    </div>
+    <h2 class="subscribe-title">Get Kubernetes tips delivered to your inbox</h2>
+    <p class="subscribe-text">Join {{ site.posts | size }}+ readers learning production-ready DevOps practices. No spam, unsubscribe anytime.</p>
+
+    <form class="subscribe-form" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
+      <div class="subscribe-input-group">
+        <input type="email" placeholder="your@email.com" class="subscribe-input" required>
+        <button type="submit" class="subscribe-btn">Subscribe</button>
+      </div>
+      <p class="subscribe-disclaimer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        No spam, just quality content
+      </p>
+    </form>
+  </div>
+</section>
