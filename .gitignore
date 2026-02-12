@@ -1,0 +1,23 @@
+# Jekyll
+.gitignore
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Prompts (local development files)
+prompts/
+IMPLEMENTATION_PLAN.md
+PROMPT_FRONTEND_BUILD.md
