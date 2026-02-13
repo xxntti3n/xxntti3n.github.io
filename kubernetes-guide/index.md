@@ -1,20 +1,24 @@
 ---
 layout: article
-title: Kubernetes Explained: What Really Happens Under the Hood
+title: "Kubernetes Explained: What Really Happens Under The Hood"
 date: 2025-02-11
+author: Tien Nguyen
+excerpt: "A complete guide to understanding Kubernetes — from basics to production-ready patterns. 15,000 words covering architecture, pods, services, networking, security, and more."
+reading_time: 75
 ---
 
 <header class="article-header">
-  <h1 class="article-title">Kubernetes Explained: What Really Happens Under the Hood</h1>
-  <p class="article-subtitle">A complete guide to understanding Kubernetes — from the basics to production-ready patterns</p>
+  <h1 class="article-title">Kubernetes Explained: What Really Happens Under The Hood</h1>
+  <p class="article-subtitle">A complete guide to understanding Kubernetes — from basics to production-ready patterns</p>
   <div class="article-meta">
     <div class="article-author">
-      <div class="author-avatar">DN</div>
+      <div class="article-author-avatar">TN</div>
       <div class="author-info">
-        <span class="author-name">DevOps Notes</span>
+        <span class="author-name">Tien Nguyen</span>
         <span class="article-date">February 11, 2025</span>
       </div>
     </div>
+    <span class="reading-time">📖 75 min read</span>
   </div>
 </header>
 
