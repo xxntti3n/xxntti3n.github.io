@@ -79,6 +79,18 @@ layout: default
     display: block;
   }
 
+  .category-hero .topic-icon-img {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+    display: block;
+    object-fit: contain;
+  }
+
+  .dark-theme .category-hero .topic-icon-img {
+    filter: invert(1) brightness(1.1);
+  }
+
   .category-hero h1 {
     font-family: var(--font-serif);
     font-size: clamp(28px, 4vw, 38px);
@@ -375,7 +387,9 @@ layout: default
 
   <header class="category-hero">
     <div class="category-hero-inner">
-      {% if page.icon %}
+      {% if page.logo %}
+      <img src="{{ page.logo }}" alt="" class="topic-icon topic-icon-img" width="56" height="56">
+      {% elsif page.icon %}
       <span class="topic-icon" aria-hidden="true">{{ page.icon }}</span>
       {% endif %}
       <h1>{{ page.title }}</h1>
