@@ -1,7 +1,7 @@
 <header class="site-header" id="siteHeader">
   <div class="site-header-content">
     <a href="/" class="site-logo">
-      <span class="site-logo-icon">TN</span>
+      <img src="/assets/images/logo-writing-book.svg" alt="" class="site-logo-icon" width="36" height="36">
       <span class="site-logo-text">{{ site.title }}</span>
     </a>
 
@@ -133,16 +133,14 @@
   .site-logo-icon {
     width: 36px;
     height: 36px;
-    background: var(--gradient-hero);
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 12px;
-    font-family: var(--font-sans);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    display: block;
+    object-fit: contain;
+    /* Logo is black; invert in dark theme so it stays visible */
+  }
+
+  .dark-theme .site-logo-icon {
+    filter: invert(1) brightness(1.1);
   }
 
   .site-logo-text {

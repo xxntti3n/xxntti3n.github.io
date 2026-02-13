@@ -317,16 +317,13 @@
     .site-logo-icon {
       width: 36px;
       height: 36px;
-      background: var(--gradient-hero);
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 12px;
-      font-family: var(--font-sans);
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      display: block;
+      object-fit: contain;
+    }
+
+    .dark-theme .site-logo-icon {
+      filter: invert(1) brightness(1.1);
     }
 
     .site-logo-text {
