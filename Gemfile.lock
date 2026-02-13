@@ -75,8 +75,9 @@ PLATFORMS
 DEPENDENCIES
   ffi (~> 1.15.5)
   jekyll (~> 3.10)
+  jekyll-feed
   kramdown-parser-gfm
   minima (~> 2.5)
 
 BUNDLED WITH
-   1.17.2
+   2.5.0
