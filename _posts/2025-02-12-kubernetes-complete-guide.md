@@ -2,10 +2,12 @@
 layout: guide
 title: "Kubernetes Explained: What Really Happens Under The Hood"
 date: 2025-02-12
+categories: [kubernetes]
 tags: [kubernetes, tutorial, guide, complete]
 author: Tien Nguyen
 excerpt: "A complete guide to understanding Kubernetes — from basics to production-ready patterns. Learn about control plane, pods, services, networking, security, storage, autoscaling, and scheduling in this comprehensive guide."
 reading_time: 75
+permalink: /kubernetes/kubernetes-guide/
 ---
 
 # Kubernetes: From Zero to Production

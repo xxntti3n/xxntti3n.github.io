@@ -202,9 +202,9 @@
       height: 20px;
     }
 
-    /* Breadcrumbs */
+    /* Breadcrumbs - compact */
     .breadcrumbs {
-      padding: 16px 0;
+      padding: 12px 0;
       font-family: var(--font-sans);
       font-size: 13px;
     }
@@ -232,47 +232,63 @@
       color: var(--text-tertiary);
     }
 
-    /* Article Layout */
+    .article-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      margin-bottom: 16px;
+      transition: color 0.2s ease;
+    }
+
+    .article-back-link:hover {
+      color: var(--accent);
+    }
+
+    /* Article Layout - cleaner, less stuffed */
     .article-layout {
       display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 48px;
-      max-width: 1200px;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+      max-width: 900px;
       margin: 0 auto;
       position: relative;
-      padding: 32px 24px 64px;
+      padding: 24px 24px 48px;
     }
 
     @media (max-width: 1024px) {
       .article-layout {
         grid-template-columns: 1fr;
-        gap: 32px;
-        padding: 24px 20px 48px;
+        gap: 24px;
+        padding: 20px 20px 40px;
       }
     }
 
-    /* Article Header */
+    /* Article Header - compact */
     .article-header {
-      padding-bottom: 24px;
+      padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
     .article-title {
       font-family: var(--font-serif);
-      font-size: clamp(28px, 4vw, 42px);
+      font-size: clamp(26px, 3.5vw, 38px);
       font-weight: 700;
-      line-height: 1.2;
-      margin: 0 0 16px;
+      line-height: 1.25;
+      margin: 0 0 12px;
       color: var(--text-primary);
     }
 
     .article-subtitle {
       font-family: var(--font-serif);
-      font-size: 18px;
+      font-size: 17px;
       line-height: 1.5;
       color: var(--text-secondary);
-      margin: 0 0 24px 0;
+      margin: 0 0 20px 0;
     }
 
     .article-meta {
@@ -289,17 +305,18 @@
     }
 
     .article-author-avatar {
-      width: 40px;
-      height: 40px;
-      background: var(--gradient-hero);
+      width: 36px;
+      height: 36px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      color: var(--text-primary);
       font-family: var(--font-sans);
       font-weight: 700;
-      font-size: 18px;
+      font-size: 14px;
     }
 
     .article-author-info {
@@ -405,6 +422,15 @@
       padding: 16px;
       margin: 20px 0;
       overflow-x: auto;
+      max-width: 100%;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .article-content pre code {
+      font-size: inherit;
+      background: transparent;
+      padding: 0;
     }
 
     .article-content code {
@@ -454,10 +480,10 @@
       text-align: center;
     }
 
-    /* TOC Sidebar */
+    /* TOC Sidebar - slimmer */
     .toc-sidebar {
       position: sticky;
-      top: 100px;
+      top: 88px;
       height: fit-content;
       align-self: start;
     }
@@ -519,87 +545,100 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
-    /* Author Bio */
+    /* Author Bio - compact */
     .author-bio {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      margin: 48px 0 32px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 32px 0 24px;
     }
 
     .dark-theme .author-bio {
-      background: var(--bg-secondary);
-      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
     }
 
     .author-bio h3 {
       font-family: var(--font-sans);
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
-      color: var(--text-primary);
-      margin: 0 0 16px 8px;
+      color: var(--text-tertiary);
+      margin: 0 0 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .author-bio p {
       font-family: var(--font-serif);
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.6;
       color: var(--text-secondary);
       margin: 0;
     }
 
-    /* Subscribe Box */
+    /* Subscribe Box - neutral, no color theme */
     .subscribe-box {
-      background: var(--gradient-hero);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin: 48px 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin: 32px 0;
       text-align: center;
+    }
+
+    .dark-theme .subscribe-box {
+      background: var(--bg-tertiary);
+      border-color: rgba(255, 255, 255, 0.1);
     }
 
     .subscribe-title {
       font-family: var(--font-serif);
-      font-size: 24px;
+      font-size: 18px;
       font-weight: 600;
-      color: white;
-      margin: 0 0 12px;
+      color: var(--text-primary);
+      margin: 0 0 8px;
     }
 
     .subscribe-box-text {
       font-family: var(--font-serif);
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.9);
-      margin: 0 0 24px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 16px;
     }
 
     .subscribe-form {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      max-width: 400px;
+      gap: 10px;
+      max-width: 360px;
       margin: 0 auto;
     }
 
     .subscribe-input {
       width: 100%;
-      padding: 14px 20px;
-      border: none;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      font-size: 16px;
+      font-size: 15px;
       font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .subscribe-input:focus {
+      outline: none;
+      border-color: var(--accent);
     }
 
     .subscribe-btn {
-      padding: 14px 32px;
-      background: white;
-      color: var(--accent);
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
       border: none;
       border-radius: var(--radius-sm);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       font-family: var(--font-sans);
       cursor: pointer;
@@ -607,21 +646,21 @@
     }
 
     .subscribe-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
     }
 
     .subscribe-terms {
       font-family: var(--font-sans);
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
-      margin-top: 12px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 10px;
     }
 
     /* Share Buttons */
     .share-section {
-      margin: 32px 0;
-      padding-top: 24px;
+      margin: 24px 0;
+      padding-top: 20px;
       border-top: 1px solid var(--border);
     }
 
@@ -712,12 +751,22 @@
   <div class="page-wrapper">
     {% include header.html %}
 
-    <!-- Breadcrumbs -->
-    <nav class="breadcrumbs container" aria-label="Breadcrumb">
-      <a href="/">Home</a>
-      <span>/</span>
-      <span class="current">{{ page.title }}</span>
-    </nav>
+    <div class="container" style="padding-top: 20px;">
+      {% if page.categories and page.categories.size > 0 %}
+      {% assign cat = page.categories | first %}
+      <a href="/{{ cat }}/" class="article-back-link">← Back to {{ cat | capitalize }}</a>
+      {% endif %}
+      <nav class="breadcrumbs" aria-label="Breadcrumb" style="padding-bottom: 8px;">
+        <a href="/">Home</a>
+        <span>/</span>
+        {% if page.categories and page.categories.size > 0 %}
+        {% assign cat = page.categories | first %}
+        <a href="/{{ cat }}/">{{ cat | capitalize }}</a>
+        <span>/</span>
+        {% endif %}
+        <span class="current">{{ page.title }}</span>
+      </nav>
+    </div>
 
     <main class="article-layout">
       <!-- TOC Sidebar -->

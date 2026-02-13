@@ -13,7 +13,8 @@
 
     <nav class="site-nav" id="siteNav">
       <a href="/" class="nav-link">Home</a>
-      <a href="/kubernetes-guide/" class="nav-link">Kubernetes Guide</a>
+      <a href="/kubernetes/" class="nav-link">Kubernetes</a>
+      <a href="/iceberg/" class="nav-link">Iceberg</a>
       <a href="/about/" class="nav-link">About</a>
       <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="nav-link nav-link--external">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -77,10 +78,9 @@
     const sunIcon = themeToggle.querySelector('.sun');
     const moonIcon = themeToggle.querySelector('.moon');
 
-    // Check for saved theme or system preference
+    // Check for saved theme; default to light for consistent UI
     const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    const currentTheme = savedTheme || 'light';
 
     if (currentTheme === 'dark') {
       document.documentElement.classList.add('dark-theme');

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Kubernetes Explained: What Really Happens Under the Hood
+title: "Kubernetes Explained: What Really Happens Under the Hood"
 ---
 
 # Kubernetes Explained: What Really Happens Under the Hood

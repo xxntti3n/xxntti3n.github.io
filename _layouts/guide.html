@@ -3,6 +3,49 @@ layout: default
 ---
 
 <style>
+  /* Guide breadcrumb */
+  .guide-breadcrumb {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 16px 24px 0;
+    font-family: var(--font-sans);
+    font-size: 13px;
+  }
+
+  .guide-breadcrumb a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .guide-breadcrumb a:hover {
+    color: var(--accent);
+  }
+
+  .guide-breadcrumb span {
+    color: var(--text-tertiary);
+    margin: 0 8px;
+  }
+
+  .guide-breadcrumb-current {
+    color: var(--text-secondary) !important;
+    margin: 0 !important;
+  }
+
+  .guide-back-link {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.2s ease;
+  }
+
+  .guide-back-link:hover {
+    color: var(--accent);
+  }
+
   /* Guide-specific Styles */
   .guide-wrapper {
     max-width: var(--content-width);
@@ -177,26 +220,32 @@ layout: default
     border-bottom-color: var(--link-hover);
   }
 
-  /* Code Blocks */
+  /* Code Blocks - visible in both light and dark theme */
   .guide-content pre {
+    background: #1e1e1e;
     background: var(--code-bg);
     border-radius: var(--radius-md);
     padding: 16px;
     margin: 20px 0;
     overflow-x: auto;
+    color: #e6edf3;
+  }
+
+  .guide-content pre code {
+    color: #e6edf3;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: transparent;
+    padding: 0;
   }
 
   .guide-content code {
     font-family: var(--font-mono);
     font-size: 14px;
     background: var(--bg-tertiary);
+    color: var(--text-primary);
     padding: 3px 6px;
     border-radius: 4px;
-  }
-
-  .guide-content pre code {
-    background: transparent;
-    padding: 0;
   }
 
   /* Inline code highlighting */
@@ -404,6 +453,23 @@ layout: default
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+<div class="guide-breadcrumb-wrap" style="max-width: var(--max-width); margin: 0 auto; padding: 20px 24px 0;">
+  {% if page.categories and page.categories.size > 0 %}
+  {% assign cat = page.categories | first %}
+  <a href="/{{ cat }}/" class="guide-back-link">← Back to {{ cat | capitalize }}</a>
+  {% endif %}
+  <nav class="guide-breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span>/</span>
+    {% if page.categories and page.categories.size > 0 %}
+    {% assign cat = page.categories | first %}
+    <a href="/{{ cat }}/">{{ cat | capitalize }}</a>
+    <span>/</span>
+    {% endif %}
+    <span class="guide-breadcrumb-current">{{ page.title }}</span>
+  </nav>
+</div>
 
 <div class="guide-wrapper">
   <!-- Table of Contents Sidebar -->

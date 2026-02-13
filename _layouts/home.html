@@ -5,23 +5,12 @@ layout: default
 <style>
   /* Homepage-specific Styles */
   .hero {
-    background: var(--gradient-hero);
+    background: var(--bg-primary);
     padding: 80px 24px 60px;
     text-align: center;
-    color: white;
+    color: var(--text-primary);
     position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.5;
+    border-bottom: 1px solid var(--border-light);
   }
 
   .hero-content {
@@ -34,28 +23,27 @@ layout: default
     align-items: center;
     gap: 8px;
     padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--bg-tertiary);
     border-radius: 30px;
     font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 500;
     margin-bottom: 32px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
   }
 
   .hero-badge-dot {
     width: 8px;
     height: 8px;
-    background: #4ade80;
+    background: var(--accent);
     border-radius: 50%;
     animation: pulse 2s infinite;
-    box-shadow: 0 0 12px #4ade80;
   }
 
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
   }
 
   .hero-title {
@@ -65,6 +53,7 @@ layout: default
     line-height: 1.15;
     margin: 0 0 24px;
     letter-spacing: -0.02em;
+    color: var(--text-primary);
   }
 
   .hero-subtitle {
@@ -73,7 +62,7 @@ layout: default
     line-height: 1.6;
     margin: 0 auto 32px;
     max-width: 580px;
-    opacity: 0.95;
+    color: var(--text-secondary);
   }
 
   .hero-stats {
@@ -91,12 +80,14 @@ layout: default
     font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 500;
+    color: var(--text-secondary);
   }
 
   .hero-stat svg {
     width: 18px;
     height: 18px;
     opacity: 0.8;
+    color: var(--accent);
   }
 
   .hero-cta {
@@ -119,27 +110,51 @@ layout: default
     text-decoration: none;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before,
+  .btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+  }
+
+  .btn-primary:hover::before,
+  .btn-secondary:hover::before {
+    width: 300px;
+    height: 300px;
   }
 
   .btn-primary {
-    background: white;
-    color: var(--accent);
+    background: var(--accent);
+    color: white;
+    border: none;
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
   }
 
   .btn-secondary {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
   }
 
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+    color: var(--accent);
     transform: translateY(-2px);
   }
 
@@ -202,7 +217,7 @@ layout: default
     overflow: hidden;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-sm);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     color: inherit;
   }
@@ -213,9 +228,14 @@ layout: default
   }
 
   .guide-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
     border-color: var(--accent);
+  }
+
+  .guide-card:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .guide-cover {
@@ -225,6 +245,21 @@ layout: default
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: relative;
+  }
+
+  .guide-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+    font-family: var(--font-sans);
   }
 
   .guide-icon {
@@ -268,14 +303,21 @@ layout: default
     gap: 16px;
     align-items: center;
     flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
   }
 
   .guide-date,
   .guide-time,
-  .guide-tag {
+  .guide-tag,
+  .guide-parts {
     font-family: var(--font-sans);
     font-size: 13px;
     color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .guide-tag {
@@ -345,8 +387,9 @@ layout: default
     padding: 32px;
     text-decoration: none;
     color: inherit;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: block;
+    position: relative;
   }
 
   .dark-theme .topic-card {
@@ -355,31 +398,109 @@ layout: default
   }
 
   .topic-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
     border-color: var(--accent);
   }
 
-  .topic-card.coming-soon {
-    opacity: 0.6;
-    cursor: not-allowed;
-    position: relative;
+  .topic-card:active {
+    transform: translateY(-2px) scale(0.99);
   }
 
-  .topic-card.coming-soon::after {
-    content: 'Coming Soon';
+  .topic-card:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .topic-card.coming-soon {
+    opacity: 0.85;
+    cursor: pointer;
+  }
+
+  .topic-card.coming-soon:hover {
+    opacity: 1;
+  }
+
+  .topic-card.coming-soon:active {
+    transform: scale(0.98);
+  }
+
+  .topic-badge {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    font-family: var(--font-sans);
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    background: var(--text-tertiary);
+    color: white;
     font-size: 10px;
     font-weight: 600;
+    border-radius: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: var(--font-sans);
+  }
+
+  .topic-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .topic-time {
+    font-size: 11px;
     color: var(--text-tertiary);
     background: var(--bg-tertiary);
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: var(--font-sans);
+  }
+
+  .topic-progress {
+    height: 3px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  .topic-card.topic-card--active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(255, 103, 25, 0.02) 0%, var(--bg-secondary) 100%);
+  }
+
+  .dark-theme .topic-card.topic-card--active {
+    background: linear-gradient(135deg, rgba(255, 103, 25, 0.06) 0%, var(--bg-secondary) 100%);
+  }
+
+  /* Toast notification for placeholder click */
+  .notification-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--text-primary);
+    color: var(--bg-primary);
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .notification-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
   }
 
   .topic-icon {
@@ -441,6 +562,20 @@ layout: default
     color: #8b949e;
   }
 
+  .subscribe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    background: rgba(79, 70, 229, 0.12);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-family: var(--font-sans);
+  }
+
   .subscribe-form-large {
     display: flex;
     flex-direction: column;
@@ -450,30 +585,46 @@ layout: default
     margin: 0 auto;
   }
 
-  .subscribe-form-large input {
+  .subscribe-input-wrapper {
+    position: relative;
     width: 100%;
-    padding: 14px 20px;
-    border: 1px solid var(--border);
+  }
+
+  .subscribe-input-wrapper input {
+    width: 100%;
+    padding: 14px 48px 14px 20px;
+    border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 16px;
     font-family: var(--font-sans);
     background: var(--bg-secondary);
     color: var(--text-primary);
+    transition: all 0.2s ease;
   }
 
-  .dark-theme .subscribe-form-large input {
+  .dark-theme .subscribe-input-wrapper input {
     background: var(--bg-secondary);
     border-color: rgba(255, 255, 255, 0.1);
     color: #f0f6fc;
   }
 
-  .subscribe-form-large input:focus {
+  .subscribe-input-wrapper input:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255, 103, 25, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 103, 25, 0.1);
   }
 
-  .subscribe-form-large button {
+  .input-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .subscribe-form-large .subscribe-btn {
     width: 100%;
     padding: 14px 28px;
     background: var(--gradient-hero);
@@ -485,11 +636,64 @@ layout: default
     font-family: var(--font-sans);
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
 
-  .subscribe-form-large button:hover {
+  .subscribe-form-large .subscribe-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  }
+
+  .subscribe-form-large .subscribe-btn:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .subscribe-form-large .subscribe-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .btn-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .subscribe-success {
+    display: none;
+    background: #dcfce7;
+    color: #166534;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 16px auto 0;
+    max-width: 400px;
+    text-align: center;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+  }
+
+  .dark-theme .subscribe-success {
+    background: #166534;
+    color: #dcfce7;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .subscribe-terms {
@@ -499,17 +703,30 @@ layout: default
     margin-top: 12px;
   }
 
-  /* Success message */
-  .subscribe-success {
-    display: none;
-    padding: 16px 20px;
-    background: #10b981;
-    color: white;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    margin-top: 16px;
+  /* Scroll-triggered animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
+  .animate-section {
+    opacity: 0;
+  }
+
+  .animate-section.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+
+  .hero.animate-section { animation-delay: 0s; }
+  .featured-section.animate-section { animation-delay: 0.1s; }
+  .topics-section.animate-section { animation-delay: 0.15s; }
+  .subscribe-hero.animate-section { animation-delay: 0.2s; }
 
   @media (max-width: 768px) {
     .hero {
@@ -565,7 +782,7 @@ layout: default
 </style>
 
 <!-- Hero Section -->
-<section class="hero">
+<section class="hero animate-section">
   <div class="hero-content">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
@@ -617,7 +834,7 @@ layout: default
 </section>
 
 <!-- Featured Kubernetes Guide -->
-<section class="featured-section">
+<section class="featured-section animate-section">
   <div class="featured-header">
     <h2 class="featured-section-title">Featured Complete Guide</h2>
     <a href="/kubernetes-guide/" class="featured-link">View all guides →</a>
@@ -627,91 +844,158 @@ layout: default
     <a href="/kubernetes-guide/" class="guide-card">
       <div class="guide-cover">
         <div class="guide-icon">K8s</div>
+        <span class="guide-badge">Complete</span>
       </div>
       <div class="guide-info">
         <h3>Kubernetes Explained: What Really Happens Under The Hood</h3>
         <p class="guide-excerpt">A complete guide covering architecture, pods, services, networking, security, storage, autoscaling, and scheduling. 15,000 words of production-ready knowledge.</p>
         <div class="guide-meta">
-          <span class="guide-date">Feb 2025</span>
-          <span class="guide-time">75 min read</span>
-          <span class="guide-tag">Complete Guide</span>
+          <span class="guide-date">📅 Feb 2025</span>
+          <span class="guide-time">⏱️ 75 min read</span>
+          <span class="guide-parts">📚 12 parts</span>
         </div>
+        <span class="guide-link">Start Reading →</span>
       </div>
     </a>
   </div>
 </section>
 
 <!-- Topics Grid -->
-<section class="topics-section">
+<section class="topics-section animate-section">
   <h2>Browse by Topic</h2>
   <p class="topics-subtitle">Explore guides organized by technology and domain</p>
   <div class="topics-grid">
-    <a href="/kubernetes-guide/" class="topic-card">
+    <a href="/kubernetes/" class="topic-card topic-card--active">
       <div class="topic-icon">🎯</div>
-      <h4>Kubernetes</h4>
+      <div class="topic-meta">
+        <h4>Kubernetes</h4>
+        <span class="topic-time">75 min read</span>
+      </div>
       <p>Complete guide from basics to production</p>
+      <div class="topic-progress">
+        <div class="progress-bar-fill" style="width: 0%"></div>
+      </div>
     </a>
 
-    <div class="topic-card coming-soon">
+    <a href="/iceberg/" class="topic-card">
+      <div class="topic-icon">🧊</div>
+      <div class="topic-meta">
+        <h4>Iceberg</h4>
+        <span class="topic-time">12 min read</span>
+      </div>
+      <p>Catalogs, table format, and lakehouse patterns</p>
+      <div class="topic-progress">
+        <div class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+    </a>
+
+    <a href="#" class="topic-card coming-soon" data-topic="Docker" aria-label="Docker – coming soon">
+      <span class="topic-badge">Coming Soon</span>
       <div class="topic-icon">🐳</div>
       <h4>Docker</h4>
       <p>Container deep-dives coming soon</p>
-    </div>
+    </a>
 
-    <div class="topic-card coming-soon">
+    <a href="#" class="topic-card coming-soon" data-topic="Cloud" aria-label="Cloud – coming soon">
+      <span class="topic-badge">Coming Soon</span>
       <div class="topic-icon">☁️</div>
       <h4>Cloud</h4>
       <p>AWS, GCP, Azure patterns and guides</p>
-    </div>
+    </a>
 
-    <div class="topic-card coming-soon">
+    <a href="#" class="topic-card coming-soon" data-topic="DevOps" aria-label="DevOps – coming soon">
+      <span class="topic-badge">Coming Soon</span>
       <div class="topic-icon">🔧</div>
       <h4>DevOps</h4>
       <p>CI/CD, pipelines, automation</p>
-    </div>
+    </a>
   </div>
 </section>
 
 <!-- Subscribe Section -->
-<section class="subscribe-hero">
+<section class="subscribe-hero animate-section" id="subscribe-section">
   <div class="subscribe-content">
+    <div class="subscribe-badge">📧 Newsletter</div>
     <h2>Stay Updated</h2>
-    <p>Get new guides and tutorials delivered to your inbox weekly.</p>
+    <p>Get new guides and tutorials delivered to your inbox weekly. No spam, ever.</p>
     <form class="subscribe-form-large" id="subscribeForm">
-      <input type="email" placeholder="your@email.com" required id="subscribeEmail">
-      <button type="submit">Subscribe</button>
+      <div class="subscribe-input-wrapper">
+        <input type="email" placeholder="your@email.com" required id="emailInput" aria-label="Email address">
+        <span class="input-icon">✉️</span>
+      </div>
+      <button type="submit" class="subscribe-btn" id="subscribeBtn">
+        <span class="btn-text">Subscribe Free</span>
+        <span class="btn-spinner"></span>
+      </button>
     </form>
-    <div class="subscribe-success" id="subscribeSuccess">
-      Thanks for subscribing! Check your inbox to confirm.
-    </div>
+    <p class="subscribe-success" id="subscribeSuccess">✓ Thanks! Check your inbox to confirm.</p>
     <p class="subscribe-terms">By subscribing, you agree to receive emails. Unsubscribe anytime.</p>
   </div>
 </section>
 
 <script>
-  // Subscribe form handling
-  const subscribeForm = document.getElementById('subscribeForm');
-  const subscribeSuccess = document.getElementById('subscribeSuccess');
+  (function() {
+    // Subscribe form with loading and success states
+    const subscribeForm = document.getElementById('subscribeForm');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const btnText = subscribeBtn && subscribeBtn.querySelector('.btn-text');
+    const btnSpinner = subscribeBtn && subscribeBtn.querySelector('.btn-spinner');
+    const successMessage = document.getElementById('subscribeSuccess');
 
-  if (subscribeForm) {
-    subscribeForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = document.getElementById('subscribeEmail').value;
+    if (subscribeForm && subscribeBtn) {
+      subscribeForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var emailInput = document.getElementById('emailInput');
+        if (!emailInput) return;
 
-      // Here you would typically send the email to your service
-      // For now, just show success message
-      subscribeForm.style.display = 'none';
-      subscribeSuccess.style.display = 'block';
+        subscribeBtn.disabled = true;
+        if (btnText) btnText.style.display = 'none';
+        if (btnSpinner) btnSpinner.style.display = 'block';
 
-      // Store in localStorage for demo
-      localStorage.setItem('subscribed', 'true');
-      localStorage.setItem('email', email);
+        await new Promise(function(r) { setTimeout(r, 1500); });
+
+        subscribeForm.style.display = 'none';
+        if (successMessage) successMessage.style.display = 'block';
+        localStorage.setItem('subscribed', 'true');
+        localStorage.setItem('email', emailInput.value);
+      });
+    }
+
+    if (localStorage.getItem('subscribed') === 'true') {
+      if (subscribeForm) subscribeForm.style.display = 'none';
+      if (successMessage) successMessage.style.display = 'block';
+    }
+
+    // Placeholder topic cards: click to notify + scroll to subscribe
+    document.querySelectorAll('.topic-card.coming-soon').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        var topic = card.getAttribute('data-topic') || (card.querySelector('h4') && card.querySelector('h4').textContent) || 'this topic';
+        var toast = document.createElement('div');
+        toast.className = 'notification-toast';
+        toast.textContent = 'Get notified when "' + topic + '" guides are ready!';
+        document.body.appendChild(toast);
+        requestAnimationFrame(function() { toast.classList.add('show'); });
+
+        var section = document.getElementById('subscribe-section');
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+
+        setTimeout(function() {
+          toast.classList.remove('show');
+          setTimeout(function() { toast.remove(); }, 400);
+        }, 4000);
+      });
     });
-  }
 
-  // Check if already subscribed
-  if (localStorage.getItem('subscribed') === 'true') {
-    if (subscribeForm) subscribeForm.style.display = 'none';
-    if (subscribeSuccess) subscribeSuccess.style.display = 'block';
-  }
+    // Scroll-triggered animations
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) entry.target.classList.add('animate-in');
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.animate-section').forEach(function(section) {
+      observer.observe(section);
+    });
+  })();
 </script>

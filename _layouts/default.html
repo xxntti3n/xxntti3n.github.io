@@ -44,68 +44,61 @@
       --text-tertiary: #6e7681;
     }
 
-    /* Dark Theme */
+    /* Dark Theme - improved contrast (Substack-style) */
     .dark-theme {
       --bg-primary: #0d1117;
       --bg-secondary: #161b22;
       --bg-tertiary: #21262d;
 
       --text-primary: #f0f6fc;
-      --text-secondary: #8b949e;
-      --text-tertiary: #6e7681;
+      --text-secondary: #c9d1d9;
+      --text-tertiary: #8b949e;
 
-      --border: rgba(255, 255, 255, 0.1);
-      --border-light: rgba(255, 255, 255, 0.05);
+      --border: #30363d;
+      --border-light: #21262d;
 
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
       --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
 
       --quote-bg: rgba(255, 103, 25, 0.1);
+      --code-bg: #0d1117;
     }
 
-      /* Accent Colors */
+    /* Accent Colors & shared variables (light mode) */
+    :root {
       --accent: #FF6719;
       --accent-hover: #e55a15;
 
-      /* Category Colors */
       --category-tech: #3b82f6;
       --category-tutorial: #8b5cf6;
       --category-guide: #10b981;
       --category-exploration: #f59e0b;
 
-      /* Border Colors */
       --border: #e5e9ef;
       --border-light: #f0f3f6;
 
-      /* Code Block */
       --code-bg: #1e1e1e;
       --quote-bg: #fffbf0;
       --quote-border: #FF6719;
 
-      /* Link Colors */
       --link-color: #0969da;
       --link-hover: #FF6719;
 
-      /* Shadows */
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
       --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
 
-      /* Gradients */
-      --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+      --gradient-hero: linear-gradient(135deg, #4f46e5 0%, #FF6719 100%);
       --gradient-warm: linear-gradient(135deg, #FF6719 0%, #ff8c42 100%);
 
-      /* Typography */
       --font-serif: 'Spectral', Georgia, 'Times New Roman', serif;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
 
-      /* Spacing */
       --max-width: 1200px;
       --content-width: 700px;
 
-      /* Border Radius */
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 16px;
@@ -122,6 +115,30 @@
       font-size: 16px;
     }
 
+    /* Skip link - accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 24px;
+      padding: 12px 24px;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      z-index: 1001;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: top 0.3s ease;
+      box-shadow: var(--shadow-md);
+    }
+
+    .skip-link:focus {
+      top: 24px;
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     body {
       margin: 0;
       padding: 0;
@@ -132,6 +149,27 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    /* Smooth theme transition - exclude interactive elements */
+    body,
+    .site-footer,
+    .content-wrapper,
+    .container,
+    .featured-section,
+    .topics-section,
+    .subscribe-hero,
+    .guide-card,
+    .topic-card,
+    .blog-card,
+    .featured-card {
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
     }
 
     ::selection {
@@ -157,13 +195,13 @@
       margin: 0 auto;
     }
 
-    /* Progress Bar */
+    /* Progress Bar - matches hero gradient */
     .progress-bar {
       position: fixed;
       top: 0;
       left: 0;
       height: 3px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+      background: linear-gradient(90deg, #4f46e5 0%, #FF6719 100%);
       width: 0%;
       z-index: 1000;
       transition: width 0.15s ease-out;
@@ -417,6 +455,12 @@
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
     }
 
     .btn-secondary {
@@ -831,12 +875,13 @@
   </style>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <div class="progress-bar" id="progressBar"></div>
 
   <div class="page-wrapper">
     {% include header.html %}
 
-    <main>
+    <main id="main-content">
       {{ content }}
     </main>
 
@@ -868,6 +913,24 @@
 
     backToTop.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Page load animation
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('loaded');
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href === '#') return;
+          const target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
     });
   </script>
 </body>

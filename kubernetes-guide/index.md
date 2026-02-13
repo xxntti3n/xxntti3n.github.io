@@ -7,23 +7,6 @@ excerpt: "A complete guide to understanding Kubernetes — from basics to produc
 reading_time: 75
 ---
 
-<header class="article-header">
-  <h1 class="article-title">Kubernetes Explained: What Really Happens Under The Hood</h1>
-  <p class="article-subtitle">A complete guide to understanding Kubernetes — from basics to production-ready patterns</p>
-  <div class="article-meta">
-    <div class="article-author">
-      <div class="article-author-avatar">TN</div>
-      <div class="author-info">
-        <span class="author-name">Tien Nguyen</span>
-        <span class="article-date">February 11, 2025</span>
-      </div>
-    </div>
-    <span class="reading-time">📖 75 min read</span>
-  </div>
-</header>
-
-<div class="article-content">
-
 If you've spent any time deploying services at scale, you've probably heard of Kubernetes. Maybe you've even cursed at it once or twice — don't worry, you're in good company. Kubernetes has become the de facto standard for container orchestration, and for good reason: it's powerful, versatile, and (once you get the hang of it) surprisingly elegant. But mastering it? That's a whole other story.
 
 Kubernetes is packed with features and an architecture that feels simple on the surface but gets complex real quick. If you've ever struggled with crashing pods, mysterious networking issues, or YAML that just won't behave, you know exactly what I mean.
@@ -812,5 +795,3 @@ Don't try to learn everything at once. Kubernetes is a marathon, not a sprint.
 ---
 
 *This guide covers the fundamentals. For hands-on practice, I recommend minikube or kind for local development.*
-
-</div>
