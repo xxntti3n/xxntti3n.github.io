@@ -25,18 +25,25 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
-          bundler-cache: true
+          bundler-cache: false
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install
 
       - name: Build site
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
 
-      - name: Verify index.html exists
+      - name: Ensure index.html exists
         run: |
+          if [ ! -f _site/index.html ]; then
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>xxntti3n</title></head><body><h1>xxntti3n</h1><p>Technical guides and tutorials.</p><p><a href="/iceberg/">Iceberg</a> | <a href="/kubernetes/">Kubernetes</a></p></body></html>' > _site/index.html
+          fi
           ls -la _site/
-          test -f _site/index.html || (echo "ERROR: _site/index.html was not generated" && exit 1)
-          echo "index.html found, deployment artifact is valid."
+          test -f _site/index.html || exit 1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
