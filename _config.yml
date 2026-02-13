@@ -31,14 +31,10 @@ collections:
     output: true
     permalink: /blog/:year/:month/:day/:title/
 
-# Defaults
+# Defaults: only posts get article layout; pages use layout from front matter (e.g. index.md -> home)
 defaults:
   - scope:
       path: ""
       type: "posts"
-    values:
-      layout: "article"
-  - scope:
-      path: ""
     values:
       layout: "article"
