@@ -5,10 +5,28 @@ layout: default
 <style>
   /* Homepage-specific Styles */
   .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+    background: var(--gradient-hero);
     padding: 80px 24px 60px;
     text-align: center;
     color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
   }
 
   .hero-badge {
@@ -16,13 +34,14 @@ layout: default
     align-items: center;
     gap: 8px;
     padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 30px;
     font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 500;
     margin-bottom: 32px;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .hero-badge-dot {
@@ -31,6 +50,7 @@ layout: default
     background: #4ade80;
     border-radius: 50%;
     animation: pulse 2s infinite;
+    box-shadow: 0 0 12px #4ade80;
   }
 
   @keyframes pulse {
@@ -56,6 +76,29 @@ layout: default
     opacity: 0.95;
   }
 
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .hero-stat svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+  }
+
   .hero-cta {
     display: flex;
     justify-content: center;
@@ -75,7 +118,7 @@ layout: default
     font-weight: 600;
     text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 
   .btn-primary {
@@ -85,7 +128,7 @@ layout: default
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   }
 
   .btn-secondary {
@@ -97,6 +140,7 @@ layout: default
 
   .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
   }
 
   .btn-secondary svg {
@@ -107,6 +151,10 @@ layout: default
   /* Featured Guide Section */
   .featured-section {
     padding: 64px 24px;
+    background: var(--bg-primary);
+  }
+
+  .dark-theme .featured-section {
     background: var(--bg-primary);
   }
 
@@ -123,6 +171,10 @@ layout: default
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+  }
+
+  .dark-theme .featured-section h2 {
+    color: #f0f6fc;
   }
 
   .featured-link {
@@ -144,12 +196,20 @@ layout: default
   }
 
   .guide-card {
+    display: flex;
     background: var(--bg-secondary);
     border-radius: var(--radius-lg);
     overflow: hidden;
     border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .dark-theme .guide-card {
+    background: var(--bg-secondary);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   .guide-card:hover {
@@ -159,11 +219,12 @@ layout: default
   }
 
   .guide-cover {
-    height: 200px;
+    width: 200px;
     background: linear-gradient(135deg, #3269d8 0%, #103855 100%);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .guide-icon {
@@ -175,6 +236,7 @@ layout: default
 
   .guide-info {
     padding: 32px;
+    flex: 1;
   }
 
   .guide-info h3 {
@@ -185,12 +247,20 @@ layout: default
     color: var(--text-primary);
   }
 
+  .dark-theme .guide-info h3 {
+    color: #f0f6fc;
+  }
+
   .guide-excerpt {
     font-family: var(--font-serif);
     font-size: 16px;
     line-height: 1.6;
     color: var(--text-secondary);
     margin: 0 0 20px;
+  }
+
+  .dark-theme .guide-excerpt {
+    color: #8b949e;
   }
 
   .guide-meta {
@@ -224,7 +294,6 @@ layout: default
     font-size: 14px;
     font-weight: 500;
     color: var(--accent);
-    text-decoration: none;
     margin-top: 16px;
   }
 
@@ -234,7 +303,11 @@ layout: default
 
   /* Topics Grid Section */
   .topics-section {
-    padding: 48px 24px;
+    padding: 64px 24px;
+    background: var(--bg-secondary);
+  }
+
+  .dark-theme .topics-section {
     background: var(--bg-secondary);
   }
 
@@ -244,7 +317,19 @@ layout: default
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
-    margin: 0 0 40px;
+    margin: 0 0 16px;
+  }
+
+  .dark-theme .topics-section h2 {
+    color: #f0f6fc;
+  }
+
+  .topics-subtitle {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-tertiary);
+    text-align: center;
+    margin-bottom: 40px;
   }
 
   .topics-grid {
@@ -254,7 +339,7 @@ layout: default
   }
 
   .topic-card {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 32px;
@@ -264,16 +349,37 @@ layout: default
     display: block;
   }
 
+  .dark-theme .topic-card {
+    background: var(--bg-primary);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
   .topic-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
     border-color: var(--accent);
   }
 
-  .topic-card.placeholder {
+  .topic-card.coming-soon {
     opacity: 0.6;
     cursor: not-allowed;
-    pointer-events: none;
+    position: relative;
+  }
+
+  .topic-card.coming-soon::after {
+    content: 'Coming Soon';
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 4px 8px;
+    border-radius: 4px;
   }
 
   .topic-icon {
@@ -287,6 +393,10 @@ layout: default
     font-weight: 600;
     margin: 0 0 8px;
     color: var(--text-primary);
+  }
+
+  .dark-theme .topic-card h4 {
+    color: #f0f6fc;
   }
 
   .topic-card p {
@@ -304,6 +414,10 @@ layout: default
     text-align: center;
   }
 
+  .dark-theme .subscribe-hero {
+    background: var(--bg-primary);
+  }
+
   .subscribe-content h2 {
     font-family: var(--font-serif);
     font-size: 28px;
@@ -312,11 +426,19 @@ layout: default
     margin: 0 0 16px;
   }
 
+  .dark-theme .subscribe-content h2 {
+    color: #f0f6fc;
+  }
+
   .subscribe-content p {
     font-family: var(--font-serif);
     font-size: 16px;
     color: var(--text-secondary);
     margin: 0 0 24px;
+  }
+
+  .dark-theme .subscribe-content p {
+    color: #8b949e;
   }
 
   .subscribe-form-large {
@@ -335,6 +457,20 @@ layout: default
     border-radius: var(--radius-sm);
     font-size: 16px;
     font-family: var(--font-sans);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  .dark-theme .subscribe-form-large input {
+    background: var(--bg-secondary);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f0f6fc;
+  }
+
+  .subscribe-form-large input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 103, 25, 0.1);
   }
 
   .subscribe-form-large button {
@@ -363,6 +499,18 @@ layout: default
     margin-top: 12px;
   }
 
+  /* Success message */
+  .subscribe-success {
+    display: none;
+    padding: 16px 20px;
+    background: #10b981;
+    color: white;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
   @media (max-width: 768px) {
     .hero {
       padding: 48px 20px;
@@ -376,11 +524,33 @@ layout: default
       font-size: 16px;
     }
 
-    .featured-guide {
-      grid-template-columns: 1fr;
+    .hero-stats {
+      gap: 16px;
+    }
+
+    .hero-cta {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .featured-section,
+    .topics-section,
+    .subscribe-hero {
+      padding: 40px 20px;
+    }
+
+    .guide-card {
+      flex-direction: column;
     }
 
     .guide-cover {
+      width: 100%;
       height: 160px;
     }
 
@@ -391,31 +561,58 @@ layout: default
     .topics-grid {
       grid-template-columns: 1fr;
     }
-
-    .subscribe-hero {
-      padding: 40px 20px;
-    }
   }
 </style>
 
 <!-- Hero Section -->
 <section class="hero">
-  <h1 class="hero-title">Technical Guides & Tutorials</h1>
-  <p class="hero-subtitle">Deep dives into software engineering, cloud infrastructure, and development best practices.</p>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      New content published regularly
+    </div>
+    <h1 class="hero-title">Technical Guides & Tutorials</h1>
+    <p class="hero-subtitle">Deep dives into software engineering, cloud infrastructure, and development best practices.</p>
 
-  <div class="hero-cta">
-    <a href="/kubernetes-guide/" class="btn-primary">
-      Start Reading
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M5 12h14M12 5l7 7"/>
-      </svg>
-    </a>
-    <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="btn-secondary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0c-6.627 0-12 5.373 12 12 5.302 3.438 9.899 5.84 5.84a3.378 3.378 3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378-3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378-3.378-.725.957.455-.977.91.793-1.604 2.302-3.438-9.899-5.84-5.84a3.378 3.378z"/>
-      </svg>
-      GitHub
-    </a>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        1 Complete Guide
+      </div>
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        75 min read time
+      </div>
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        Made with care
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <a href="/kubernetes-guide/" class="btn-primary">
+        Start Reading
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7"/>
+        </svg>
+      </a>
+      <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.627 0-12 5.373-12 12 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
   </div>
 </section>
 
@@ -423,6 +620,7 @@ layout: default
 <section class="featured-section">
   <div class="featured-header">
     <h2 class="featured-section-title">Featured Complete Guide</h2>
+    <a href="/kubernetes-guide/" class="featured-link">View all guides →</a>
   </div>
 
   <div class="featured-guide">
@@ -438,7 +636,6 @@ layout: default
           <span class="guide-time">75 min read</span>
           <span class="guide-tag">Complete Guide</span>
         </div>
-        <span class="guide-link">Read Complete Guide →</span>
       </div>
     </a>
   </div>
@@ -447,6 +644,7 @@ layout: default
 <!-- Topics Grid -->
 <section class="topics-section">
   <h2>Browse by Topic</h2>
+  <p class="topics-subtitle">Explore guides organized by technology and domain</p>
   <div class="topics-grid">
     <a href="/kubernetes-guide/" class="topic-card">
       <div class="topic-icon">🎯</div>
@@ -454,24 +652,23 @@ layout: default
       <p>Complete guide from basics to production</p>
     </a>
 
-    <!-- Future topics - placeholder -->
-    <a href="#" class="topic-card topic-card--placeholder">
+    <div class="topic-card coming-soon">
       <div class="topic-icon">🐳</div>
       <h4>Docker</h4>
       <p>Container deep-dives coming soon</p>
-    </a>
+    </div>
 
-    <a href="#" class="topic-card topic-card--placeholder">
+    <div class="topic-card coming-soon">
       <div class="topic-icon">☁️</div>
       <h4>Cloud</h4>
       <p>AWS, GCP, Azure patterns and guides</p>
-    </a>
+    </div>
 
-    <a href="#" class="topic-card topic-card--placeholder">
+    <div class="topic-card coming-soon">
       <div class="topic-icon">🔧</div>
       <h4>DevOps</h4>
       <p>CI/CD, pipelines, automation</p>
-    </a>
+    </div>
   </div>
 </section>
 
@@ -480,10 +677,41 @@ layout: default
   <div class="subscribe-content">
     <h2>Stay Updated</h2>
     <p>Get new guides and tutorials delivered to your inbox weekly.</p>
-    <form class="subscribe-form-large" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
-      <input type="email" placeholder="your@email.com" required>
+    <form class="subscribe-form-large" id="subscribeForm">
+      <input type="email" placeholder="your@email.com" required id="subscribeEmail">
       <button type="submit">Subscribe</button>
     </form>
+    <div class="subscribe-success" id="subscribeSuccess">
+      Thanks for subscribing! Check your inbox to confirm.
+    </div>
     <p class="subscribe-terms">By subscribing, you agree to receive emails. Unsubscribe anytime.</p>
   </div>
 </section>
+
+<script>
+  // Subscribe form handling
+  const subscribeForm = document.getElementById('subscribeForm');
+  const subscribeSuccess = document.getElementById('subscribeSuccess');
+
+  if (subscribeForm) {
+    subscribeForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('subscribeEmail').value;
+
+      // Here you would typically send the email to your service
+      // For now, just show success message
+      subscribeForm.style.display = 'none';
+      subscribeSuccess.style.display = 'block';
+
+      // Store in localStorage for demo
+      localStorage.setItem('subscribed', 'true');
+      localStorage.setItem('email', email);
+    });
+  }
+
+  // Check if already subscribed
+  if (localStorage.getItem('subscribed') === 'true') {
+    if (subscribeForm) subscribeForm.style.display = 'none';
+    if (subscribeSuccess) subscribeSuccess.style.display = 'block';
+  }
+</script>
