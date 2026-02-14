@@ -5,6 +5,7 @@ date: 2026-02-14
 author: Tien Nguyen
 excerpt: "A production-style streaming framework: read CDC from MySQL, join and aggregate two tables in Flink, write one result table to Iceberg, query with Trino, and chart with Superset."
 reading_time: 25
+permalink: /streaming-processing-guide/
 ---
 
 If you're building a lakehouse or real-time analytics pipeline, you've probably juggled CDC, stream processing, and table formats. Getting them to work together—with joins and aggregates on the fly—is where it gets interesting. This guide walks through an end-to-end streaming framework: **MySQL CDC → Apache Flink (join + aggregate) → Apache Iceberg → Trino → Superset**.

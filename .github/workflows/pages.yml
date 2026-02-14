@@ -25,12 +25,10 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
-          bundler-cache: false
+          bundler-cache: true
 
       - name: Install dependencies
-        run: |
-          bundle config set --local path vendor/bundle
-          bundle install
+        run: bundle install
 
       - name: Build site
         run: bundle exec jekyll build
@@ -40,7 +38,7 @@ jobs:
       - name: Ensure index.html exists
         run: |
           if [ ! -f _site/index.html ]; then
-            echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>xxntti3n</title></head><body><h1>xxntti3n</h1><p>Technical guides and tutorials.</p><p><a href="/iceberg/">Iceberg</a> | <a href="/kubernetes/">Kubernetes</a></p></body></html>' > _site/index.html
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>xxntti3n</title></head><body><h1>xxntti3n</h1><p>Technical guides and tutorials.</p><p><a href="/streaming-processing-guide/">Streaming guide</a> | <a href="/iceberg/">Iceberg</a> | <a href="/kubernetes/">Kubernetes</a></p></body></html>' > _site/index.html
           fi
           ls -la _site/
           test -f _site/index.html || exit 1

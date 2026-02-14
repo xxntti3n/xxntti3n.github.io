@@ -1,0 +1,9 @@
+current directory: /site/vendor/bundle/ruby/3.3.0/gems/http_parser.rb-0.8.1/ext/ruby_http_parser
+/usr/local/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /site/vendor/bundle/ruby/3.3.0/gems/http_parser.rb-0.8.1/ext/ruby_http_parser
+make DESTDIR\= sitearchdir\=./.gem.20260214-688-gkwxa0 sitelibdir\=./.gem.20260214-688-gkwxa0 clean
+current directory: /site/vendor/bundle/ruby/3.3.0/gems/http_parser.rb-0.8.1/ext/ruby_http_parser
+make DESTDIR\= sitearchdir\=./.gem.20260214-688-gkwxa0 sitelibdir\=./.gem.20260214-688-gkwxa0
+make failedNo such file or directory - make
