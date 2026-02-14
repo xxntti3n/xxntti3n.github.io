@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kubernetes Explained: What Really Happens Under the Hood | xxntti3n</title>
+  <meta name="description" content="Technical guides, tutorials, and explorations in software engineering">
+  <meta name="author" content="xxntti3n">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Kubernetes Explained: What Really Happens Under the Hood">
+  <meta property="og:description" content="Technical guides, tutorials, and explorations in software engineering">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://xxntti3n.github.io/kubernetes-complete-guide.html">
+  <meta property="og:image" content="https://xxntti3n.github.io/assets/og-image.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/atom+xml" title="xxntti3n" href="/feed.xml">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png">
+
+  
+
+  <style>
+    :root {
+      /* Background Colors */
+      --bg-primary: #fafafa;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f5f7f9;
+
+      /* Text Colors */
+      --text-primary: #0d1117;
+      --text-secondary: #3b4252;
+      --text-tertiary: #6e7681;
+    }
+
+    /* Dark Theme - improved contrast (Substack-style) */
+    .dark-theme {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+
+      --text-primary: #f0f6fc;
+      --text-secondary: #c9d1d9;
+      --text-tertiary: #8b949e;
+
+      --border: #30363d;
+      --border-light: #21262d;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+
+      --quote-bg: rgba(255, 103, 25, 0.1);
+      --code-bg: #0d1117;
+    }
+
+    /* Accent Colors & shared variables (light mode) */
+    :root {
+      --accent: #FF6719;
+      --accent-hover: #e55a15;
+
+      --category-tech: #3b82f6;
+      --category-tutorial: #8b5cf6;
+      --category-guide: #10b981;
+      --category-exploration: #f59e0b;
+
+      --border: #e5e9ef;
+      --border-light: #f0f3f6;
+
+      --code-bg: #1e1e1e;
+      --quote-bg: #fffbf0;
+      --quote-border: #FF6719;
+
+      --link-color: #0969da;
+      --link-hover: #FF6719;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+      --gradient-hero: linear-gradient(135deg, #4f46e5 0%, #FF6719 100%);
+      --gradient-warm: linear-gradient(135deg, #FF6719 0%, #ff8c42 100%);
+
+      --font-serif: 'Spectral', Georgia, 'Times New Roman', serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+
+      --max-width: 1200px;
+      --content-width: 700px;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    /* Skip link - accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 24px;
+      padding: 12px 24px;
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      z-index: 1001;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: top 0.3s ease;
+      box-shadow: var(--shadow-md);
+    }
+
+    .skip-link:focus {
+      top: 24px;
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-serif);
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    /* Smooth theme transition - exclude interactive elements */
+    body,
+    .site-footer,
+    .content-wrapper,
+    .container,
+    .featured-section,
+    .topics-section,
+    .subscribe-hero,
+    .guide-card,
+    .topic-card,
+    .blog-card,
+    .featured-card {
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
+    }
+
+    ::selection {
+      background: rgba(255, 103, 25, 0.2);
+      color: var(--text-primary);
+    }
+
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    .content-wrapper {
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+
+    /* Progress Bar - matches hero gradient */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #4f46e5 0%, #FF6719 100%);
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Back to top */
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      background: var(--gradient-hero);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .back-to-top svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Footer */
+    .site-footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      margin-top: auto;
+    }
+
+    .footer-content {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin: 0;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .social-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .social-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Site Header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-light);
+      transition: all 0.2s ease;
+    }
+
+    .site-header-content {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .site-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .site-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .dark-theme .site-logo-icon {
+      filter: invert(1) brightness(1.1);
+    }
+
+    .site-logo-text {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .site-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .site-nav a {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .site-nav a:hover {
+      color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+      padding: 80px 24px;
+      text-align: center;
+      color: white;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin: 0 0 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      line-height: 1.6;
+      margin: 0 0 32px;
+      opacity: 0.95;
+      max-width: 580px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Subscribe Section */
+    .subscribe-section {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .subscribe-container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .subscribe-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .subscribe-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 600;
+      margin: 0 0 12px;
+      color: var(--text-primary);
+    }
+
+    .subscribe-text {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin: 0 0 24px;
+    }
+
+    .subscribe-input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .subscribe-input {
+      flex: 1;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .subscribe-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255, 103, 25, 0.1);
+    }
+
+    .subscribe-btn {
+      padding: 14px 28px;
+      background: var(--gradient-hero);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .subscribe-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .subscribe-disclaimer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin: 0;
+    }
+
+    /* Section Styles */
+    .featured-section,
+    .blog-section {
+      padding: 48px 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-family: var(--font-sans);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .section-link {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .section-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Featured Card */
+    .featured-card {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .featured-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent);
+    }
+
+    .featured-image {
+      width: 280px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .featured-image svg {
+      width: 80px;
+      height: 80px;
+      color: var(--accent);
+      opacity: 0.5;
+    }
+
+    .featured-content {
+      padding: 32px;
+      flex: 1;
+    }
+
+    .featured-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .featured-meta {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+
+    .featured-content h2 {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: var(--text-primary);
+    }
+
+    .featured-excerpt {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Blog Grid */
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .blog-card {
+      display: block;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .blog-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent);
+    }
+
+    .blog-card-image {
+      height: 160px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .blog-card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-hero);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      font-family: var(--font-sans);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .blog-card-icon svg {
+      color: white;
+    }
+
+    .blog-card-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      padding: 0 20px;
+      padding-top: 20px;
+      color: var(--text-primary);
+    }
+
+    .blog-card-excerpt {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      margin: 0;
+      padding: 0 20px;
+    }
+
+    .blog-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .blog-card-date {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .blog-card-tag {
+      padding: 4px 10px;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+      }
+
+      .site-header-content {
+        height: 56px;
+      }
+
+      .site-nav {
+        gap: 16px;
+      }
+
+      .hero {
+        padding: 48px 20px;
+      }
+
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .hero-stats {
+        gap: 16px;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        justify-content: center;
+      }
+
+      .subscribe-section {
+        padding: 40px 20px;
+      }
+
+      .subscribe-title {
+        font-size: 20px;
+      }
+
+      .subscribe-input-group {
+        flex-direction: column;
+      }
+
+      .featured-card {
+        flex-direction: column;
+      }
+
+      .featured-image {
+        width: 100%;
+        height: 180px;
+      }
+
+      .featured-content {
+        padding: 20px;
+      }
+
+      .featured-content h2 {
+        font-size: 20px;
+      }
+
+      .blog-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 15px;
+      }
+
+      .hero-title {
+        font-size: 26px;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="page-wrapper">
+    <header class="site-header" id="siteHeader">
+  <div class="site-header-content">
+    <a href="/" class="site-logo">
+      <img src="/assets/images/logo-writing-book.svg" alt="" class="site-logo-icon" width="36" height="36">
+      <span class="site-logo-text">xxntti3n</span>
+    </a>
+
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+    </button>
+
+    <nav class="site-nav" id="siteNav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/kubernetes/" class="nav-link">Kubernetes</a>
+      <a href="/iceberg/" class="nav-link">Iceberg</a>
+      <a href="/about/" class="nav-link">About</a>
+      <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="nav-link nav-link--external">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+
+      <!-- Dark mode toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const siteNav = document.getElementById('siteNav');
+    const siteHeader = document.getElementById('siteHeader');
+
+    mobileMenuToggle.addEventListener('click', () => {
+      mobileMenuToggle.classList.toggle('active');
+      siteNav.classList.toggle('active');
+      document.body.style.overflow = siteNav.classList.contains('active') ? 'hidden' : '';
+    });
+
+    // Close menu when clicking a link
+    document.querySelectorAll('.site-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenuToggle.classList.remove('active');
+        siteNav.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!siteHeader.contains(e.target) && siteNav.classList.contains('active')) {
+        mobileMenuToggle.classList.remove('active');
+        siteNav.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Dark mode toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const sunIcon = themeToggle.querySelector('.sun');
+    const moonIcon = themeToggle.querySelector('.moon');
+
+    // Check for saved theme; default to light for consistent UI
+    const savedTheme = localStorage.getItem('theme');
+    const currentTheme = savedTheme || 'light';
+
+    if (currentTheme === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark-theme');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      sunIcon.style.display = isDark ? 'none' : 'block';
+      moonIcon.style.display = isDark ? 'block' : 'none';
+    });
+  </script>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+  }
+
+  .dark-theme .site-header {
+    background: rgba(13, 17, 23, 0.95);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .site-header-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .site-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .site-logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: block;
+    object-fit: contain;
+    /* Logo is black; invert in dark theme so it stays visible */
+  }
+
+  .dark-theme .site-logo-icon {
+    filter: invert(1) brightness(1.1);
+  }
+
+  .site-logo-text {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  .dark-theme .site-logo-text {
+    color: #f0f6fc;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 101;
+  }
+
+  .mobile-menu-toggle .hamburger {
+    width: 24px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .dark-theme .mobile-menu-toggle .hamburger {
+    background: #f0f6fc;
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .site-nav .nav-link {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dark-theme .site-nav .nav-link {
+    color: #8b949e;
+  }
+
+  .site-nav .nav-link:hover {
+    color: var(--accent);
+  }
+
+  .site-nav .nav-link--external {
+    opacity: 0.8;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+  }
+
+  .dark-theme .theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f0f6fc;
+  }
+
+  .theme-toggle:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-menu-toggle {
+      display: flex;
+    }
+
+    .site-nav {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+
+    .dark-theme .site-nav {
+      background: #0d1117;
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-nav.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .site-nav .nav-link {
+      padding: 14px 0;
+      font-size: 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .dark-theme .site-nav .nav-link {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-nav .nav-link:last-child {
+      border-bottom: none;
+    }
+
+    .theme-toggle {
+      margin-top: 16px;
+      width: 100%;
+      height: 44px;
+    }
+  }
+</style>
+
+
+    <main id="main-content">
+      <h1 id="kubernetes-explained-what-really-happens-under-the-hood">Kubernetes Explained: What Really Happens Under the Hood</h1>
+
+<p>If you’ve spent any time deploying services at scale, you’ve probably heard of Kubernetes. Maybe you’ve even cursed at it once or twice — don’t worry, you’re in good company. Kubernetes has become the de facto standard for container orchestration, and for good reason: it’s powerful, versatile, and (once you get the hang of it) surprisingly elegant. But mastering it? That’s a whole other story.</p>
+
+<p>Kubernetes is packed with features and an architecture that feels simple on the surface but gets complex real quick. If you’ve ever struggled with crashing pods, mysterious networking issues, or YAML that just won’t behave, you know exactly what I mean.</p>
+
+<p>This guide is your complete roadmap to understanding Kubernetes — from the basics to production-ready patterns.</p>
+
+<hr />
+
+<h2 id="part-1-the-architecture---understanding-the-control-plane">Part 1: The Architecture - Understanding the Control Plane</h2>
+
+<p>Before we deploy anything, we need to understand what’s actually running under the hood. Kubernetes isn’t a monolithic application — it’s a distributed system with distinct components that work together.</p>
+
+<h3 id="the-mental-model">The Mental Model</h3>
+
+<p>Think of Kubernetes as an operating system for your datacenter. Just as your laptop’s OS manages processes, networking, and storage on a single machine, Kubernetes manages these across an entire fleet of servers.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Kubernetes Cluster                              │
+│                                                                       │
+│  ┌────────────────── Control Plane ──────────────────┐                 │
+│  │                                                  │                 │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │  │   API       │  │   Scheduler  │  │   Controller │         │
+│  │  │   Server    │◄─┤              │  │   Manager    │         │
+│  │  └──────┬──────┘  └──────────────┘  └───────┬──────┘         │
+│  │         │                                   │                   │
+│  │         │              ┌──────────────┐        │                   │
+│  │         └─────────────┤   etcd      │◄───────┘                   │
+│  │                        (key-value store)                          │
+│  └────────────────────────────────────────────────────────────────────┘   │
+│                                │                                     │
+│                    ┌───────────┴───────────┐                         │
+│                    │       Watch/Notify      │                         │
+│                    ▼                       ▼                         │
+│  ┌────────────────┐              ┌────────────────┐                    │
+│  │    Node 1      │              │    Node 2      │     ...           │
+│  │  ┌──────────┐ │              │  ┌──────────┐ │                    │
+│  │  │ Kubelet  │◄├──────────────├──┤ Kubelet  │◄───┐              │
+│  │  └────┬─────┘ │              │  └────┬─────┘ │    │              │
+│  │       │       │              │       │       │    │              │
+│  │  ┌────┴─────┐ │              │  ┌────┴─────┐ │    │              │
+│  │  │kube-proxy│ │              │  │kube-proxy│ │    │              │
+│  │  └──────────┘ │              │  └──────────┘ │    │              │
+│  │  ┌──────────┐ │              │  ┌──────────┐ │    │              │
+│  │  │Container │ │              │  │Container │ │    │              │
+│  │  │Runtime   │ │              │  │Runtime   │ │    │              │
+│  │  └──────────┘ │              │  └──────────┘ │    │              │
+│  │  Pod  Pod  Pod│              │  Pod  Pod  Pod│    │              │
+│  └────────────────┘              └────────────────┘    │              │
+│                                                   │              │
+│                                                   └── Network ────┘
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<h3 id="the-control-plane-components">The Control Plane Components</h3>
+
+<h4 id="api-server---the-front-door">API Server - The Front Door</h4>
+
+<p>Every interaction with Kubernetes goes through the API Server. It’s the only component that talks to etcd directly. When you run <code class="language-plaintext highlighter-rouge">kubectl get pods</code>, you’re actually making an HTTP request to the API Server.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># What kubectl really does under the hood</span>
+kubectl get pods
+<span class="c"># ↓</span>
+<span class="c"># GET /api/v1/namespaces/default/pods</span>
+<span class="c"># Host: kubernetes.default.svc</span>
+<span class="c"># Authorization: Bearer &lt;service-account-token&gt;</span>
+</code></pre></div></div>
+
+<p>The API Server validates, authenticates, and then stores your request in etcd. It’s stateless — you can run multiple instances behind a load balancer.</p>
+
+<h4 id="etcd---the-source-of-truth">etcd - The Source of Truth</h4>
+
+<p>etcd is a distributed key-value store. Every Kubernetes object — every pod, service, config map — exists as a key-value pair in etcd.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/registry/pods/default/nginx-abc123 → {
+  "apiVersion": "v1",
+  "kind": "Pod",
+  "metadata": { "name": "nginx-abc123", ... },
+  "spec": { "containers": [...], ... }
+}
+</code></pre></div></div>
+
+<blockquote>
+  <p>💡 <strong>Why etcd matters</strong>: When a node fails and all its pods die, the Controller Manager watches etcd for “missing” pods and schedules replacements. The entire self-healing mechanism depends on etcd’s consistency guarantees.</p>
+</blockquote>
+
+<h4 id="scheduler---the-placement-engine">Scheduler - The Placement Engine</h4>
+
+<p>When you create a pod, it starts in <code class="language-plaintext highlighter-rouge">Pending</code> state. The Scheduler’s job: find a node where it can run.</p>
+
+<p>The scoring algorithm considers:</p>
+
+<ul>
+  <li><strong>Resource availability</strong>: Does the node have enough CPU/memory?</li>
+  <li><strong>Affinity rules</strong>: Does this pod prefer certain nodes?</li>
+  <li><strong>Taints and tolerations</strong>: Is this node allowed to run this pod?</li>
+  <li><strong>Pod disruption budget</strong>: Would scheduling here violate availability constraints?</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Example: How scheduler thinks</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">affinity</span><span class="pi">:</span>
+    <span class="na">nodeAffinity</span><span class="pi">:</span>
+      <span class="na">preferredDuringSchedulingIgnoredDuringExecution</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">weight</span><span class="pi">:</span> <span class="m">100</span>
+          <span class="na">preference</span><span class="pi">:</span>
+            <span class="na">matchExpressions</span><span class="pi">:</span>
+              <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">disktype</span>
+                <span class="na">operator</span><span class="pi">:</span> <span class="s">In</span>
+                <span class="na">values</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">ssd"</span><span class="pi">]</span>
+  <span class="na">tolerations</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s2">"</span><span class="s">dedicated"</span>
+      <span class="na">operator</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Equal"</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">database"</span>
+      <span class="na">effect</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NoSchedule"</span>
+</code></pre></div></div>
+
+<h4 id="controller-manager---the-reconciler">Controller Manager - The Reconciler</h4>
+
+<p>Kubernetes works on a <strong>reconciliation loop</strong> model. The Controller Manager continuously watches the desired state (your YAML) and the actual state (etcd), and makes them match.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>while true:
+    desired_state = get_from_etcd()
+    actual_state = query_cluster()
+    if desired_state != actual_state:
+        reconcile(desired_state, actual_state)
+</code></pre></div></div>
+
+<p>Common controllers:</p>
+<ul>
+  <li><strong>ReplicaSet Controller</strong>: Ensures N copies of each pod are running</li>
+  <li><strong>Deployment Controller</strong>: Rolls out new ReplicaSets for updates</li>
+  <li><strong>Namespace Controller</strong>: Cleans up resources when namespaces delete</li>
+  <li><strong>Service Account Controller</strong>: Creates default service accounts</li>
+</ul>
+
+<hr />
+
+<h2 id="part-2-the-pod---kubernetess-atomic-unit">Part 2: The Pod - Kubernetes’s Atomic Unit</h2>
+
+<p>A pod is NOT a container. A pod is a group of containers that share:</p>
+<ul>
+  <li>Network namespace (same IP, same localhost)</li>
+  <li>Storage volumes (shared filesystem)</li>
+  <li>Lifecycle (start together, die together)</li>
+</ul>
+
+<h3 id="single-container-pod-99-of-cases">Single Container Pod (99% of cases)</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────┐
+│                      Pod                             │
+│  IP: 10.244.1.5                                  │
+│                                                     │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │                                                 │
+│  │   ┌───────────────────────────────────────┐    │  │
+│  │   │                                       │    │  │
+│  │   │        Container (nginx)                │    │  │
+│  │   │        - Process ID 1                 │    │  │
+│  │   │        - Filesytem rootfs            │    │  │
+│  │   │                                       │    │  │
+│  │   └───────────────────────────────────────┘    │  │
+│  │                                                 │
+│  │   Volume mounts                                 │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                     │
+│  Pause container (network namespace holder)              │
+└─────────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">pause</code> container is the secret sauce. It holds the network namespace so your app container can restart without losing its IP.</p>
+
+<h3 id="multi-container-pod-sidecar-pattern">Multi-Container Pod (Sidecar Pattern)</h3>
+
+<p>This is where Kubernetes gets interesting. Sidecars let you extend functionality without modifying the main container.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">webapp-with-logging</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">app</span>
+      <span class="na">image</span><span class="pi">:</span> <span class="s">myapp:latest</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">logs</span>
+          <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/log/app</span>
+
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">log-shipper</span>
+      <span class="na">image</span><span class="pi">:</span> <span class="s">fluentd:latest</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">logs</span>
+          <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/log/app</span>
+          <span class="na">readOnly</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="c1"># This container reads what the first one writes</span>
+</code></pre></div></div>
+
+<p>Common sidecar patterns:</p>
+<ul>
+  <li><strong>Log shipping</strong>: Fluentd/Filebeat tail logs while app writes them</li>
+  <li><strong>Proxies</strong>: Envoy/Istio sidecar handles TLS, mTLS, observability</li>
+  <li><strong>Adapters</strong>: Transform logs/metrics before sending to monitoring</li>
+  <li><strong>Ambassador</strong>: Connect to external services (databases, APIs)</li>
+</ul>
+
+<h3 id="the-pod-lifecycle---what-actually-happens">The Pod Lifecycle - What Actually Happens</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl run nginx --image=nginx
+│
+├─► API Server receives request, stores in etcd
+│   Status: Pending
+│
+├─► Scheduler sees pending pod, evaluates nodes
+│   Scores nodes, picks best match
+│   Updates pod spec with nodeName
+│
+├─► Kubelet on target node watches for pods assigned to it
+│   Sees new pod, calls CRI (container runtime)
+│   Pulls image (if not cached)
+│   Creates pause container
+│   Creates app container(s)
+│
+├─► Kube-proxy updates iptables/IPVS rules
+│   Adds Service endpoints for this pod
+│
+└─► Pod is Running
+    Status: Running
+    Ready: true (after readiness probe passes)
+</code></pre></div></div>
+
+<blockquote>
+  <p>💡 <strong>Why readiness probes matter</strong>: A pod’s IP is added to Service endpoints only AFTER the readiness probe succeeds. Without this, traffic hits pods that aren’t ready to serve requests.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="part-3-deployments---managing-state-at-scale">Part 3: Deployments - Managing State at Scale</h2>
+
+<p>A Deployment is a declarative way to manage ReplicaSets, which manage Pods. It’s three levels of indirection that enable rolling updates and rollbacks.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Deployment  ──manages──►  ReplicaSet  ──manages──►  Pods
+    │                             │                       │
+    │  Creates new ReplicaSet    │  Creates N pods       │
+    │  for updates               │                       │
+    │                             │                       │
+    ▼                             ▼                       ▼
+"3 replicas of              "Pods with label         actual containers
+nginx:1.19"               app=nginx, v=1.19"      with processes
+</code></pre></div></div>
+
+<h3 id="rolling-update---what-really-happens">Rolling Update - What Really Happens</h3>
+
+<p>When you change a Deployment’s image:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nb">set </span>image deployment/nginx <span class="nv">nginx</span><span class="o">=</span>nginx:1.20
+</code></pre></div></div>
+
+<p>Here’s the sequence:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Time 0:  ReplicaSet-A (nginx:1.19) has 3 pods
+        ┌─────────┬─────────┬─────────┐
+        │ Pod-A1  │ Pod-A2  │ Pod-A3  │  (v1.19)
+        └─────────┴─────────┴─────────┘
+
+Time 1:  Create ReplicaSet-B (nginx:1.20), scale to 1
+        ┌─────────┬─────────┬─────────┐
+        │ Pod-A1  │ Pod-A2  │ Pod-A3  │  (v1.19)
+        └─────────┴─────────┴─────────┘
+        ┌─────────┐
+        │ Pod-B1  │  (v1.20) ← new pod
+        └─────────┘
+
+Time 2:  Pod-B1 is ready, scale ReplicaSet-B to 2, scale A to 2
+        ┌─────────┬─────────┬─────────┐
+        │ Pod-A1  │ Pod-A2  │         │  (v1.19)
+        └─────────┴─────────┴─────────┘
+        ┌─────────┬─────────┐
+        │ Pod-B1  │ Pod-B2  │  (v1.20)
+        └─────────┴─────────┘
+
+Time 3:  Continue until all 3 are v1.20
+        ┌─────────┬─────────┬─────────┐
+        │         │         │         │
+        └─────────┴─────────┴─────────┘
+        ┌─────────┬─────────┬─────────┐
+        │ Pod-B1  │ Pod-B2  │ Pod-B3  │  (v1.20)
+        └─────────┴─────────┴─────────┘
+
+Result:  ReplicaSet-A scaled to 0 (kept for rollback)
+         ReplicaSet-B has 3 pods
+</code></pre></div></div>
+
+<p>The default behavior:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">maxSurge: 25%</code> - Can create 25% more pods than desired</li>
+  <li><code class="language-plaintext highlighter-rouge">maxUnavailable: 25%</code> - Can have 25% fewer pods than desired</li>
+</ul>
+
+<h3 id="the-deployment-status-dance">The Deployment Status Dance</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl rollout status deployment/nginx
+</code></pre></div></div>
+
+<p>This command blocks until:</p>
+<ol>
+  <li>All new replicas are created</li>
+  <li>All new replicas are Ready</li>
+  <li>All old replicas are terminated</li>
+</ol>
+
+<p>If anything fails, the rollout pauses:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Progress deadline exceeded
+→ The deployment timed out waiting for new replicas to become ready
+→ Old ReplicaSet is still running (safety mechanism)
+→ You can: rollback, adjust, or continue
+</code></pre></div></div>
+
+<h3 id="rollback---instant-revert">Rollback - Instant Revert</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl rollout undo deployment/nginx
+</code></pre></div></div>
+
+<p>This doesn’t “undo” anything — it simply scales up the old ReplicaSet and scales down the new one. That’s why Kubernetes keeps old ReplicaSets around by default (default: 10 revisions).</p>
+
+<hr />
+
+<h2 id="part-4-services---making-pods-findable">Part 4: Services - Making Pods Findable</h2>
+
+<p>Pods are ephemeral. Their IPs change when they restart. Services provide stable endpoints for a dynamic set of pods.</p>
+
+<h3 id="how-services-work-under-the-hood">How Services Work Under the Hood</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Service creates stable IP/DNS
+         │
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Service (ClusterIP)                  │
+│  IP: 10.96.0.10 (stable)                         │
+│  Selector: app=nginx                                │
+└─────────────────────────────────────────────────────────┘
+         │
+         │ kube-proxy programs:
+         │ - iptables rules OR
+         │ - IPVS load balancing
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Endpoints                          │
+│  10.244.1.5:80   (pod A)                        │
+│  10.244.1.6:80   (pod B)                        │
+│  10.244.2.7:80   (pod C)                        │
+└─────────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p>Every Service gets:</p>
+<ul>
+  <li><strong>ClusterIP</strong>: Internal virtual IP (only reachable within cluster)</li>
+  <li><strong>DNS name</strong>: <code class="language-plaintext highlighter-rouge">nginx.default.svc.cluster.local</code></li>
+  <li><strong>Endpoints list</strong>: Updated automatically as pods come/go</li>
+</ul>
+
+<h3 id="service-types---when-to-use-what">Service Types - When to Use What</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Use Case</th>
+      <th>External Access</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>ClusterIP</strong></td>
+      <td>Internal microservices</td>
+      <td>No (cluster only)</td>
+      <td>Default, most common</td>
+    </tr>
+    <tr>
+      <td><strong>NodePort</strong></td>
+      <td>Testing, local dev</td>
+      <td>Yes (NodeIP:Port)</td>
+      <td>Port 30000-32767</td>
+    </tr>
+    <tr>
+      <td><strong>LoadBalancer</strong></td>
+      <td>Production, cloud LB</td>
+      <td>Yes (cloud LB IP)</td>
+      <td>Requires cloud controller</td>
+    </tr>
+    <tr>
+      <td><strong>Headless</strong></td>
+      <td>StatefulSet, DNS directly</td>
+      <td>No</td>
+      <td>Returns pod IPs, not proxy</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="headless-services---when-you-need-direct-access">Headless Services - When You Need Direct Access</h3>
+
+<p>For StatefulSets or when you need to know which pod you’re talking to:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">mongo</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">clusterIP</span><span class="pi">:</span> <span class="s">None</span>  <span class="c1"># ← Makes it headless</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">mongodb</span>
+  <span class="na">ports</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">27017</span>
+</code></pre></div></div>
+
+<p>Result: DNS returns A records for each pod directly:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mongo-0.mongo.default.svc.cluster.local → 10.244.1.5
+mongo-1.mongo.default.svc.cluster.local → 10.244.1.6
+mongo-2.mongo.default.svc.cluster.local → 10.244.2.7
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="part-5-configmap-and-secret---configuration-management">Part 5: ConfigMap and Secret - Configuration Management</h2>
+
+<p>Never hardcode configuration in container images. Images should be immutable; configuration should be external.</p>
+
+<h3 id="configmap---non-sensitive-configuration">ConfigMap - Non-Sensitive Configuration</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ConfigMap</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">app-config</span>
+<span class="na">data</span><span class="pi">:</span>
+  <span class="na">database_host</span><span class="pi">:</span> <span class="s2">"</span><span class="s">postgres.default.svc.cluster.local"</span>
+  <span class="na">cache_ttl</span><span class="pi">:</span> <span class="s2">"</span><span class="s">300"</span>
+  <span class="na">features.json</span><span class="pi">:</span> <span class="pi">|</span>
+    <span class="s">{</span>
+      <span class="s">"new_ui": true,</span>
+      <span class="s">"beta_features": false</span>
+    <span class="s">}</span>
+</code></pre></div></div>
+
+<p><strong>Ways to use ConfigMaps:</strong></p>
+
+<ol>
+  <li><strong>Environment variables</strong>:
+    <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">envFrom</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">configMapRef</span><span class="pi">:</span>
+  <span class="err"> </span><span class="na">name</span><span class="pi">:</span> <span class="s">app-config</span>
+</code></pre></div>    </div>
+  </li>
+  <li><strong>Single value as env var</strong>:
+    <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">env</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">DB_HOST</span>
+ <span class="na">valueFrom</span><span class="pi">:</span>
+   <span class="na">configMapKeyRef</span><span class="pi">:</span>
+     <span class="na">name</span><span class="pi">:</span> <span class="s">app-config</span>
+     <span class="na">key</span><span class="pi">:</span> <span class="s">database_host</span>
+</code></pre></div>    </div>
+  </li>
+  <li><strong>Mounted as files</strong>:
+    <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">volumeMounts</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">config</span>
+ <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/etc/config</span>
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">config</span>
+ <span class="na">configMap</span><span class="pi">:</span>
+   <span class="na">name</span><span class="pi">:</span> <span class="s">app-config</span>
+<span class="c1"># Results in /etc/config/database_host, /etc/config/cache_ttl, /etc/config/features.json</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h3 id="secret---sensitive-data">Secret - Sensitive Data</h3>
+
+<p>Secrets are similar to ConfigMaps but:</p>
+<ul>
+  <li>Base64 encoded (not encrypted by default!)</li>
+  <li>Separate RBAC permissions</li>
+  <li>Can use external secret stores (Vault, AWS Secrets Manager)</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Secret</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">db-credentials</span>
+<span class="na">type</span><span class="pi">:</span> <span class="s">Opaque</span>
+<span class="na">data</span><span class="pi">:</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="s">cGFzc3dvcmQxMjM=</span>  <span class="c1"># base64("password123")</span>
+  <span class="na">api-key</span><span class="pi">:</span> <span class="s">YWJjZGVmZ2hpams=</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>⚠️ <strong>Critical</strong>: Base64 is encoding, not encryption. Anyone with API access can decode secrets. Use:</p>
+  <ul>
+    <li>External secrets operator (for Vault, cloud secret managers)</li>
+    <li>Encryption at rest (etcd encryption config)</li>
+    <li>RBAC to limit secret access</li>
+  </ul>
+</blockquote>
+
+<h3 id="the-immutable-pattern-best-practice">The Immutable Pattern (Best Practice)</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ConfigMap</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">app-v2</span>
+<span class="na">immutable</span><span class="pi">:</span> <span class="no">true</span>  <span class="c1"># Can't be updated after creation</span>
+<span class="na">data</span><span class="pi">:</span>
+  <span class="c1"># ...</span>
+</code></pre></div></div>
+
+<p>When you update config:</p>
+<ol>
+  <li>Create new ConfigMap (app-v2)</li>
+  <li>Update Deployment to reference app-v2</li>
+  <li>Rollout restarts pods with new config</li>
+  <li>Old ConfigMap (app-v1) can be deleted after rollout</li>
+</ol>
+
+<p>This prevents accidentally changing config and causing undefined behavior.</p>
+
+<hr />
+
+<h2 id="part-6-ingress---httphttps-routing">Part 6: Ingress - HTTP/HTTPS Routing</h2>
+
+<p>Services handle L4 (TCP) load balancing. Ingress handles L7 (HTTP) routing — path-based routing, TLS termination, host-based routing.</p>
+
+<h3 id="why-ingress">Why Ingress?</h3>
+
+<p>Without Ingress:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>External LoadBalancer (expensive!)
+    ├── Service A (NodePort 30001)
+    ├── Service B (NodePort 30002)
+    └── Service C (NodePort 30003)
+</code></pre></div></div>
+
+<p>With Ingress:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>External LoadBalancer (one!)
+    └── Ingress Controller (Nginx/Traefik/Contour)
+        ├── /api/v1   → Service A
+        ├── /api/v2   → Service B
+        └── /static   → Service C
+</code></pre></div></div>
+
+<h3 id="ingress-resource-definition">Ingress Resource Definition</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Ingress</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">web-ingress</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">nginx.ingress.kubernetes.io/rewrite-target</span><span class="pi">:</span> <span class="s">/</span>
+    <span class="na">nginx.ingress.kubernetes.io/ssl-redirect</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">ingressClassName</span><span class="pi">:</span> <span class="s">nginx</span>
+  <span class="na">tls</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">hosts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">example.com</span>
+      <span class="na">secretName</span><span class="pi">:</span> <span class="s">tls-cert-secret</span>
+  <span class="na">rules</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">example.com</span>
+      <span class="na">http</span><span class="pi">:</span>
+        <span class="na">paths</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/api</span>
+            <span class="na">pathType</span><span class="pi">:</span> <span class="s">Prefix</span>
+            <span class="na">backend</span><span class="pi">:</span>
+              <span class="na">service</span><span class="pi">:</span>
+                <span class="na">name</span><span class="pi">:</span> <span class="s">api-service</span>
+                <span class="na">port</span><span class="pi">:</span>
+                  <span class="na">number</span><span class="pi">:</span> <span class="m">80</span>
+          <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/</span>
+            <span class="na">pathType</span><span class="pi">:</span> <span class="s">Prefix</span>
+            <span class="na">backend</span><span class="pi">:</span>
+              <span class="na">service</span><span class="pi">:</span>
+                <span class="na">name</span><span class="pi">:</span> <span class="s">web-service</span>
+                <span class="na">port</span><span class="pi">:</span>
+                  <span class="na">number</span><span class="pi">:</span> <span class="m">80</span>
+</code></pre></div></div>
+
+<h3 id="how-ingress-controllers-work">How Ingress Controllers Work</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────────────────────┐
+│                     Ingress Controller Pod                        │
+│  (Nginx/Traefik/Contour running inside your cluster)           │
+│                                                                │
+│  1. Watches Ingress resources via API Server                    │
+│  2. Generates config dynamically (nginx.conf)                     │
+│  3. Reloads config gracefully                                  │
+│  4. Terminates TLS                                            │
+│  5. Proxies to Services via ClusterDNS                         │
+└─────────────────────────────────────────────────────────────────────┘
+                          │
+                          │ HTTP/HTTPS (Layer 7)
+                          ▼
+                   ┌─────────────┐
+                   │   Service   │
+                   └─────────────┘
+</code></pre></div></div>
+
+<p>Popular Ingress Controllers:</p>
+<ul>
+  <li><strong>Nginx Ingress</strong>: Battle-tested, feature-rich</li>
+  <li><strong>Traefik</strong>: Auto-config, great dashboard</li>
+  <li><strong>Contour</strong>: Envoy-based, HTTP/2, gRPC support</li>
+  <li><strong>AWS ALB Ingress</strong>: Uses AWS ALB directly</li>
+</ul>
+
+<hr />
+
+<h2 id="part-7-statefulset---for-databases-and-stateful-apps">Part 7: StatefulSet - For Databases and Stateful Apps</h2>
+
+<p>Deployments create pods with random names. StatefulSets create numbered, ordered pods with stable identities.</p>
+
+<h3 id="when-to-use-statefulset">When to Use StatefulSet?</h3>
+
+<ul>
+  <li>Databases (PostgreSQL, MySQL, MongoDB)</li>
+  <li>Distributed systems (ZooKeeper, etcd)</li>
+  <li>Applications needing stable storage</li>
+  <li>Ordered deployment and scaling</li>
+</ul>
+
+<h3 id="statefulset-vs-deployment">StatefulSet vs Deployment</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Deployment:
+    nginx-deployment-7b8c9x5-k4abc  (random)
+    nginx-deployment-7b8c9x5-p9def  (random)
+    nginx-deployment-7b8c9x5-m2ghi  (random)
+    → No ordering, no stable identity
+
+StatefulSet:
+    postgres-0  (always 0, starts first)
+    postgres-1  (always 1, starts after 0)
+    postgres-2  (always 2, starts after 1)
+    → Ordered deployment, stable network identity, stable storage
+</code></pre></div></div>
+
+<h3 id="example-postgresql-cluster">Example: PostgreSQL Cluster</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">clusterIP</span><span class="pi">:</span> <span class="s">None</span>  <span class="c1"># Headless for StatefulSets</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">postgres</span>
+  <span class="na">ports</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">5432</span>
+<span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">StatefulSet</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">serviceName</span><span class="pi">:</span> <span class="s">postgres</span>  <span class="c1"># Must match headless service</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="m">3</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">app</span><span class="pi">:</span> <span class="s">postgres</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">app</span><span class="pi">:</span> <span class="s">postgres</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+          <span class="na">image</span><span class="pi">:</span> <span class="s">postgres:15</span>
+          <span class="na">ports</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="m">5432</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+          <span class="na">env</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">POSTGRES_REPLICA_MODE</span>
+              <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">slave"</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">POSTGRES_MASTER</span>
+              <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">postgres-0.postgres"</span>  <span class="c1"># Uses stable DNS!</span>
+          <span class="na">volumeMounts</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">data</span>
+              <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/lib/postgresql/data</span>
+  <span class="na">volumeClaimTemplates</span><span class="pi">:</span>  <span class="c1"># Each pod gets unique PVC</span>
+    <span class="pi">-</span> <span class="na">metadata</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">data</span>
+      <span class="na">spec</span><span class="pi">:</span>
+        <span class="na">accessModes</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">ReadWriteOnce"</span><span class="pi">]</span>
+        <span class="na">resources</span><span class="pi">:</span>
+          <span class="na">requests</span><span class="pi">:</span>
+            <span class="na">storage</span><span class="pi">:</span> <span class="s">10Gi</span>
+</code></pre></div></div>
+
+<p>Result:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">postgres-0.postgres.default.svc.cluster.local</code> → master</li>
+  <li><code class="language-plaintext highlighter-rouge">postgres-1.postgres.default.svc.cluster.local</code> → replica 1</li>
+  <li><code class="language-plaintext highlighter-rouge">postgres-2.postgres.default.svc.cluster.local</code> → replica 2</li>
+  <li>Each has its own persistent volume</li>
+</ul>
+
+<hr />
+
+<h2 id="part-8-daemonset---one-pod-per-node">Part 8: DaemonSet - One Pod Per Node</h2>
+
+<p>DaemonSets ensure a pod runs on every (or selected) node. Use cases:</p>
+<ul>
+  <li>Logging agents (Fluentd, Filebeat)</li>
+  <li>Monitoring agents (Prometheus node-exporter)</li>
+  <li>Network plugins (Calico, Cilium)</li>
+  <li>Storage agents (Ceph, GlusterFS)</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">DaemonSet</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">kube-system</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">app</span><span class="pi">:</span> <span class="s">fluentd</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">app</span><span class="pi">:</span> <span class="s">fluentd</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">tolerations</span><span class="pi">:</span>
+        <span class="c1"># Run on master nodes too</span>
+        <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">node-role.kubernetes.io/control-plane</span>
+          <span class="na">operator</span><span class="pi">:</span> <span class="s">Exists</span>
+          <span class="na">effect</span><span class="pi">:</span> <span class="s">NoSchedule</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">fluentd</span>
+          <span class="na">image</span><span class="pi">:</span> <span class="s">fluentd:latest</span>
+          <span class="na">volumeMounts</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlog</span>
+              <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/log</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlibdockercontainers</span>
+              <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/var/lib/docker/containers</span>
+              <span class="na">readOnly</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlog</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/var/log</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">varlibdockercontainers</span>
+          <span class="na">hostPath</span><span class="pi">:</span>
+            <span class="na">path</span><span class="pi">:</span> <span class="s">/var/lib/docker/containers</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="part-9-job-and-cronjob---batch-processing">Part 9: Job and CronJob - Batch Processing</h2>
+
+<p>Not everything runs continuously. Jobs run to completion, then exit.</p>
+
+<h3 id="job---one-time-or-parallel-tasks">Job - One-Time or Parallel Tasks</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">batch/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Job</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">data-import</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">completions</span><span class="pi">:</span> <span class="m">10</span>  <span class="c1"># Need 10 successful completions</span>
+  <span class="na">parallelism</span><span class="pi">:</span> <span class="m">3</span>    <span class="c1"># Run 3 in parallel</span>
+  <span class="na">backoffLimit</span><span class="pi">:</span> <span class="m">6</span>    <span class="c1"># Retry failed pods up to 6 times</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">restartPolicy</span><span class="pi">:</span> <span class="s">Never</span>  <span class="c1"># Jobs use Never or OnFailure</span>
+      <span class="na">containers</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">importer</span>
+          <span class="na">image</span><span class="pi">:</span> <span class="s">data-importer:latest</span>
+          <span class="na">args</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">--batch-size=1000"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<p>Use cases:</p>
+<ul>
+  <li>Database migrations</li>
+  <li>Batch data processing</li>
+  <li>Backup jobs</li>
+  <li>One-time initialization</li>
+</ul>
+
+<h3 id="cronjob---scheduled-recurring-tasks">CronJob - Scheduled Recurring Tasks</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">batch/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">CronJob</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">nightly-cleanup</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">schedule</span><span class="pi">:</span> <span class="s2">"</span><span class="s">0</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*"</span>  <span class="c1"># 2 AM daily</span>
+  <span class="na">successfulJobsHistoryLimit</span><span class="pi">:</span> <span class="m">3</span>
+  <span class="na">failedJobsHistoryLimit</span><span class="pi">:</span> <span class="m">3</span>
+  <span class="na">jobTemplate</span><span class="pi">:</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">template</span><span class="pi">:</span>
+        <span class="na">spec</span><span class="pi">:</span>
+          <span class="na">containers</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">cleanup</span>
+              <span class="na">image</span><span class="pi">:</span> <span class="s">cleanup-script:latest</span>
+          <span class="na">restartPolicy</span><span class="pi">:</span> <span class="s">OnFailure</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>⚠️ <strong>CronJob gotcha</strong>: Kubernetes doesn’t guarantee exact execution time. If your cluster is busy, the job might start late. The <code class="language-plaintext highlighter-rouge">startingDeadlineSeconds</code> parameter controls how late is too late.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="part-10-network-policy---traffic-control">Part 10: Network Policy - Traffic Control</h2>
+
+<p>By default, Kubernetes allows all pod-to-pod traffic. NetworkPolicy lets you define rules like “frontend can talk to backend, but not to database.”</p>
+
+<h3 id="default-deny-all">Default Deny All</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">NetworkPolicy</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">default-deny</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">podSelector</span><span class="pi">:</span> <span class="pi">{}</span>  <span class="c1"># Matches all pods</span>
+  <span class="na">policyTypes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">Ingress</span>
+    <span class="pi">-</span> <span class="s">Egress</span>
+</code></pre></div></div>
+
+<h3 id="allow-specific-traffic">Allow Specific Traffic</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">NetworkPolicy</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">backend-policy</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">podSelector</span><span class="pi">:</span>
+    <span class="na">matchLabels</span><span class="pi">:</span>
+      <span class="na">app</span><span class="pi">:</span> <span class="s">backend</span>
+  <span class="na">policyTypes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">Ingress</span>
+    <span class="pi">-</span> <span class="s">Egress</span>
+  <span class="na">ingress</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">from</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">podSelector</span><span class="pi">:</span>
+            <span class="na">matchLabels</span><span class="pi">:</span>
+              <span class="na">app</span><span class="pi">:</span> <span class="s">frontend</span>
+      <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">protocol</span><span class="pi">:</span> <span class="s">TCP</span>
+          <span class="na">port</span><span class="pi">:</span> <span class="m">8080</span>
+  <span class="na">egress</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">to</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">podSelector</span><span class="pi">:</span>
+            <span class="na">matchLabels</span><span class="pi">:</span>
+              <span class="na">app</span><span class="pi">:</span> <span class="s">database</span>
+      <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">protocol</span><span class="pi">:</span> <span class="s">TCP</span>
+          <span class="na">port</span><span class="pi">:</span> <span class="m">5432</span>
+    <span class="pi">-</span> <span class="na">to</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">namespaceSelector</span><span class="pi">:</span>
+            <span class="na">matchLabels</span><span class="pi">:</span>
+              <span class="na">name</span><span class="pi">:</span> <span class="s">kube-system</span>
+      <span class="na">ports</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">protocol</span><span class="pi">:</span> <span class="s">UDP</span>
+          <span class="na">port</span><span class="pi">:</span> <span class="m">53</span>  <span class="c1"># DNS</span>
+</code></pre></div></div>
+
+<p>Requires a CNI that supports NetworkPolicy:</p>
+<ul>
+  <li>Calico (most feature-complete)</li>
+  <li>Cilium (eBPF-based, very fast)</li>
+  <li>Weave Net</li>
+  <li>Romana</li>
+</ul>
+
+<hr />
+
+<h2 id="part-11-rbac---access-control">Part 11: RBAC - Access Control</h2>
+
+<p>Kubernetes has a powerful RBAC system. Every request is: <code class="language-plaintext highlighter-rouge">User → Group → ServiceAccount</code> trying to do <code class="language-plaintext highlighter-rouge">Action</code> on <code class="language-plaintext highlighter-rouge">Resource</code>.</p>
+
+<h3 id="the-model">The Model</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Subject (who)
+    │
+    ├── User: "jane@example.com"     (external auth)
+    ├── Group: "devops"              (external auth)
+    └── ServiceAccount: "bot"         (Kubernetes native)
+         │
+         └── gets permissions via RoleBinding/ClusterRoleBinding
+              │
+              ▼
+         Role (namespace-scoped) or ClusterRole (cluster-wide)
+              │
+              defines: apiGroups, resources, verbs
+              │
+              ▼
+         Resources: pods, deployments, configmaps, secrets, etc.
+         Verbs: get, list, watch, create, update, delete, etc.
+</code></pre></div></div>
+
+<h3 id="example-readonly-user">Example: ReadOnly User</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Create a service account</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">readonly-user</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="nn">---</span>
+<span class="c1"># Create a role with read-only permissions</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Role</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">readonly-role</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">rules</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">"</span><span class="pi">]</span>
+    <span class="na">resources</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">pods"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">services"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">configmaps"</span><span class="pi">]</span>
+    <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">get"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">list"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">watch"</span><span class="pi">]</span>
+<span class="nn">---</span>
+<span class="c1"># Bind the role to the service account</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">RoleBinding</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">readonly-binding</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">subjects</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">kind</span><span class="pi">:</span> <span class="s">ServiceAccount</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">readonly-user</span>
+    <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">roleRef</span><span class="pi">:</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">Role</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">readonly-role</span>
+  <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
+</code></pre></div></div>
+
+<h3 id="common-rbac-patterns">Common RBAC Patterns</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Pattern</th>
+      <th>Role</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Read-only</strong></td>
+      <td>get, list, watch</td>
+      <td>Dashboards, monitoring</td>
+    </tr>
+    <tr>
+      <td><strong>Developer</strong></td>
+      <td>* on resources except secrets/secrets</td>
+      <td>Dev team</td>
+    </tr>
+    <tr>
+      <td><strong>CI/CD</strong></td>
+      <td>create, update, delete on deployments</td>
+      <td>Pipeline bots</td>
+    </tr>
+    <tr>
+      <td><strong>Admin</strong></td>
+      <td>* on *</td>
+      <td>Platform engineers</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>💡 <strong>Best practice</strong>: Never give admin permissions to applications. Use least privilege. Regularly audit with <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list --all-namespaces</code>.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="part-12-horizontal-pod-autoscaler---auto-scaling">Part 12: Horizontal Pod Autoscaler - Auto-scaling</h2>
+
+<p>HPA automatically scales deployments based on CPU, memory, or custom metrics.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">autoscaling/v2</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">HorizontalPodAutoscaler</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">web-hpa</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">scaleTargetRef</span><span class="pi">:</span>
+    <span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+    <span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">web</span>
+  <span class="na">minReplicas</span><span class="pi">:</span> <span class="m">2</span>
+  <span class="na">maxReplicas</span><span class="pi">:</span> <span class="m">10</span>
+  <span class="na">metrics</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">Resource</span>
+      <span class="na">resource</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">cpu</span>
+        <span class="na">target</span><span class="pi">:</span>
+          <span class="na">type</span><span class="pi">:</span> <span class="s">Utilization</span>
+          <span class="na">averageUtilization</span><span class="pi">:</span> <span class="m">70</span>
+    <span class="pi">-</span> <span class="na">type</span><span class="pi">:</span> <span class="s">Resource</span>
+      <span class="na">resource</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">memory</span>
+        <span class="na">target</span><span class="pi">:</span>
+          <span class="na">type</span><span class="pi">:</span> <span class="s">Utilization</span>
+          <span class="na">averageAverageValue</span><span class="pi">:</span> <span class="m">80</span>
+</code></pre></div></div>
+
+<h3 id="how-hpa-works">How HPA Works</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1. Metrics Server collects metrics from pods (every 15s)
+2. HPA controller calculates desired replicas:
+   desiredReplicas = currentReplicas × (currentMetric / targetMetric)
+3. If desired != current, scales Deployment
+4. Takes ~30 seconds to detect change + 30 seconds to scale
+</code></pre></div></div>
+
+<blockquote>
+  <p>⚠️ <strong>HPA gotcha</strong>: If you manually scale a Deployment managed by HPA, HPA will revert it. To manually scale, update the HPA’s min/max or temporarily delete the HPA.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="part-13-storage---pv-pvc-storageclass">Part 13: Storage - PV, PVC, StorageClass</h2>
+
+<p>Kubernetes separates storage provisioning (StorageClass/PV) from storage consumption (PVC).</p>
+
+<h3 id="the-model-1">The Model</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>StorageClass (defines storage types)
+    ├── "fast-ssd" → provisions SSD disks
+    ├── "standard" → provisions HDD disks
+    └── "nfs" → provisions NFS shares
+         │
+         ▼ creates
+PersistentVolume (actual storage)
+    ├── PV-1: 10Gi SSD, RWO
+    ├── PV-2: 50Gi HDD, RWX
+    └── PV-3: 5Gi SSD, RWO
+         │
+         ▼ claimed by
+PersistentVolumeClaim (pod's request for storage)
+    ├── pvc-1: needs 10Gi, RWO → binds to PV-1
+    └── pvc-2: needs 5Gi, RWO → binds to PV-3
+         │
+         ▼ mounted by
+Pod
+    volumeMount: pvc-1 → /data
+</code></pre></div></div>
+
+<h3 id="storageclass---dynamic-provisioning">StorageClass - Dynamic Provisioning</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">storage.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">StorageClass</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fast-ssd</span>
+<span class="na">provisioner</span><span class="pi">:</span> <span class="s">kubernetes.io/aws-ebs</span>  <span class="c1"># Or other cloud provider</span>
+<span class="na">parameters</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">gp3</span>
+  <span class="na">iops</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3000"</span>
+  <span class="na">throughput</span><span class="pi">:</span> <span class="s2">"</span><span class="s">125"</span>
+<span class="na">allowVolumeExpansion</span><span class="pi">:</span> <span class="no">true</span>
+<span class="na">reclaimPolicy</span><span class="pi">:</span> <span class="s">Delete</span>  <span class="c1"># or Retain</span>
+<span class="na">volumeBindingMode</span><span class="pi">:</span> <span class="s">WaitForFirstConsumer</span>
+</code></pre></div></div>
+
+<h3 id="pvc---claiming-storage">PVC - Claiming Storage</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">data-pvc</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteOnce</span>  <span class="c1"># RWO, RWX, or ReadOnlyMany</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">fast-ssd</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">20Gi</span>
+</code></pre></div></div>
+
+<h3 id="access-modes">Access Modes</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mode</th>
+      <th>Description</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>ReadWriteOnce (RWO)</strong></td>
+      <td>Single node read-write</td>
+      <td>Most databases, stateful apps</td>
+    </tr>
+    <tr>
+      <td><strong>ReadOnlyMany (ROX)</strong></td>
+      <td>Multiple nodes read-only</td>
+      <td>Shared configuration, CDNs</td>
+    </tr>
+    <tr>
+      <td><strong>ReadWriteMany (RWX)</strong></td>
+      <td>Multiple nodes read-write</td>
+      <td>NFS-based shared storage</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="part-14-taints-and-tolerations---pod-scheduling-control">Part 14: Taints and Tolerations - Pod Scheduling Control</h2>
+
+<p>Taints repel pods. Tolerations allow pods to be scheduled on tainted nodes.</p>
+
+<h3 id="use-cases">Use Cases</h3>
+
+<ul>
+  <li><strong>Dedicated nodes</strong>: Database-only nodes</li>
+  <li><strong>Hardware constraints</strong>: GPU nodes for ML workloads</li>
+  <li><strong>Special networking</strong>: Nodes with direct internet access</li>
+  <li><strong>Node maintenance</strong>: Mark nodes for draining</li>
+</ul>
+
+<h3 id="example-dedicated-database-nodes">Example: Dedicated Database Nodes</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Taint the node</span>
+<span class="s">kubectl taint nodes node-1 database=dedicated:NoSchedule</span>
+</code></pre></div></div>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Pod that CAN run on database nodes</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">tolerations</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">database</span>
+      <span class="na">operator</span><span class="pi">:</span> <span class="s">Equal</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s">dedicated</span>
+      <span class="na">effect</span><span class="pi">:</span> <span class="s">NoSchedule</span>
+  <span class="c1"># ... rest of pod spec</span>
+</code></pre></div></div>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Deployment that MUST run on database nodes</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apps/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">postgres</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">tolerations</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">database</span>
+          <span class="na">operator</span><span class="pi">:</span> <span class="s">Equal</span>
+          <span class="na">value</span><span class="pi">:</span> <span class="s">dedicated</span>
+          <span class="na">effect</span><span class="pi">:</span> <span class="s">NoSchedule</span>
+      <span class="na">affinity</span><span class="pi">:</span>
+        <span class="na">nodeAffinity</span><span class="pi">:</span>
+          <span class="na">requiredDuringSchedulingIgnoredDuringExecution</span><span class="pi">:</span>
+            <span class="na">nodeSelectorTerms</span><span class="pi">:</span>
+              <span class="pi">-</span> <span class="na">matchExpressions</span><span class="pi">:</span>
+                  <span class="pi">-</span> <span class="na">key</span><span class="pi">:</span> <span class="s">database</span>
+                    <span class="na">operator</span><span class="pi">:</span> <span class="s">In</span>
+                    <span class="na">values</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">dedicated"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h3 id="taint-effects">Taint Effects</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Effect</th>
+      <th>Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>NoSchedule</strong></td>
+      <td>Pod won’t be scheduled unless it tolerates</td>
+    </tr>
+    <tr>
+      <td><strong>PreferNoSchedule</strong></td>
+      <td>Scheduler tries to avoid, but allows</td>
+    </tr>
+    <tr>
+      <td><strong>NoExecute</strong></td>
+      <td>Evicts existing pods that don’t tolerate</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="putting-it-all-together-a-microservice-architecture">Putting It All Together: A Microservice Architecture</h2>
+
+<p>Here’s how these pieces fit in a real application:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                        Ingress Controller
+                     (Nginx, Traefik, etc.)
+                               │
+                    ┌──────────┴──────────┐
+                    ▼                     ▼
+              Frontend Svc           Backend Svc
+            (Deployment)           (Deployment)
+            3 replicas             HPA: 2-10 replicas
+                    │                     │
+                    │                     │
+                    ▼                     ▼
+            ┌──────────┐         ┌──────────┐
+            │  Pods:   │         │  Pods:   │
+            │  web-xxx  │         │ api-xxx   │
+            │  web-yyy  │         │ api-yyy   │
+            │  web-zzz  │         │ api-zzz   │
+            └──────────┘         └──────────┘
+                    │                     │
+                    │ ConfigMap/Secret     │ ConfigMap/Secret
+                    │                     │
+                    ▼                     ▼
+            ┌──────────┐         ┌──────────┐
+            │          │         │          │
+            └──────────┘         └──────────┘
+                    │                     │
+                    └────────┬────────────┘
+                             ▼
+                    ┌─────────────────┐
+                    │  Database Svc   │
+                    │  (StatefulSet) │
+                    │  postgres-0    │
+                    │  postgres-1    │
+                    │  postgres-2    │
+                    └─────────────────┘
+                             │
+                        PVC per pod
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="quick-reference-commands">Quick Reference Commands</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Get all resources in namespace</span>
+kubectl get all
+
+<span class="c"># Watch pod status</span>
+kubectl get pods <span class="nt">-w</span>
+
+<span class="c"># Get pod logs (follow)</span>
+kubectl logs <span class="nt">-f</span> pod/name
+
+<span class="c"># Get pod logs with previous container (if crashed)</span>
+kubectl logs pod/name <span class="nt">--previous</span>
+
+<span class="c"># Execute command in pod</span>
+kubectl <span class="nb">exec</span> <span class="nt">-it</span> pod/name <span class="nt">--</span> /bin/sh
+
+<span class="c"># Port forward to local machine</span>
+kubectl port-forward pod/name 8080:80
+
+<span class="c"># Apply manifest</span>
+kubectl apply <span class="nt">-f</span> manifest.yaml
+
+<span class="c"># Edit live resource (not recommended for prod)</span>
+kubectl edit deployment/name
+
+<span class="c"># Describe resource for debugging</span>
+kubectl describe pod/name
+
+<span class="c"># Check rollout status</span>
+kubectl rollout status deployment/name
+
+<span class="c"># Rollback deployment</span>
+kubectl rollout undo deployment/name
+
+<span class="c"># Scale deployment</span>
+kubectl scale deployment/name <span class="nt">--replicas</span><span class="o">=</span>5
+
+<span class="c"># Get events for namespace</span>
+kubectl get events <span class="nt">--sort-by</span><span class="o">=</span><span class="s1">'.lastTimestamp'</span>
+
+<span class="c"># Check API resources</span>
+kubectl api-resources
+
+<span class="c"># Explain a resource</span>
+kubectl explain pod.spec
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="common-pitfalls-and-solutions">Common Pitfalls and Solutions</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Problem</th>
+      <th>Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Pod keeps restarting</td>
+      <td>App crashes, OOMKilled</td>
+      <td>Check logs, increase memory limits, fix app</td>
+    </tr>
+    <tr>
+      <td>ImagePullBackOff</td>
+      <td>Wrong image name/credentials</td>
+      <td>Check image name, create imagePullSecret</td>
+    </tr>
+    <tr>
+      <td>CrashLoopBackOff</td>
+      <td>App fails healthcheck</td>
+      <td>Fix readiness/liveness probe or app</td>
+    </tr>
+    <tr>
+      <td>Pending (Insufficient cpu)</td>
+      <td>Cluster doesn’t have resources</td>
+      <td>Add nodes or reduce resource requests</td>
+    </tr>
+    <tr>
+      <td>Service can’t reach pod</td>
+      <td>Wrong selector, wrong port</td>
+      <td>Check Service selector matches pod labels</td>
+    </tr>
+    <tr>
+      <td>DNS not working</td>
+      <td>Missing DNS policy, wrong service name</td>
+      <td>Use FQDN: <code class="language-plaintext highlighter-rouge">service.namespace.svc.cluster.local</code></td>
+    </tr>
+    <tr>
+      <td>ConfigMap not found</td>
+      <td>Typo in name, wrong namespace</td>
+      <td>Check namespace, verify ConfigMap exists</td>
+    </tr>
+    <tr>
+      <td>Storage provisioning fails</td>
+      <td>No StorageClass, wrong provisioner</td>
+      <td>Verify StorageClass exists, check cloud setup</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="learning-checklist">Learning Checklist</h2>
+
+<p>Use this to track your progress:</p>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Architecture</strong>: Understand control plane vs. worker nodes</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Pods</strong>: Run a simple nginx pod</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Deployments</strong>: Deploy an application with 3 replicas</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Services</strong>: Expose deployment via ClusterIP</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>ConfigMap/Secret</strong>: Externalize configuration</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Ingress</strong>: Set up HTTP routing with TLS</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>StatefulSet</strong>: Deploy a StatefulSet with persistent storage</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Job/CronJob</strong>: Run a scheduled batch job</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>NetworkPolicy</strong>: Restrict pod-to-pod traffic</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>RBAC</strong>: Create a read-only service account</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>HPA</strong>: Enable autoscaling based on CPU</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Storage</strong>: Use PVCs with StatefulSets</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" /><strong>Taints/Tolerations</strong>: Dedicate nodes for specific workloads</li>
+</ul>
+
+<hr />
+
+<h2 id="external-resources">External Resources</h2>
+
+<ul>
+  <li><a href="https://kubernetes.io/docs/">Official Kubernetes Documentation</a></li>
+  <li><a href="https://kubernetes.io/docs/reference/kubectl/cheatsheet/">Kubectl Cheat Sheet</a></li>
+  <li><a href="https://kubernetes.io/docs/tutorials/">Interactive Tutorials</a></li>
+  <li><a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">Kubernetes The Hard Way</a></li>
+</ul>
+
+<hr />
+
+<p><em>Last updated: February 2026</em></p>
+
+    </main>
+
+    <footer class="site-footer">
+  <div class="footer-content">
+    <p class="footer-text">&copy; 2026 xxntti3n. Built with <a href="https://jekyllrb.com/" style="color: inherit;">Jekyll</a> & <a href="https://pages.github.com/" style="color: inherit;">GitHub Pages</a>.</p>
+    <div class="social-links">
+      <a href="https://linkedin.com/in/xxntti3n" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </a>
+      <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+      </a>
+      <a href="/feed.xml" aria-label="RSS Feed">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.43 7.39 20.4 6.18 20.4a2.18 2.18 0 0 1-2.18-2.18c0-1.21.97-2.18 2.18-2.18zM2 10.1a12 12 0 0 1 12 12 12 12 0 0 1 3.53-8.43 12 12 0 0 1-3.53-8.43H12A10 10 0 0 0 2 10.1zm0-5.9a17.9 17.9 0 0 1 17.9 17.9 17.9 17.9 0 0 1 5.27 12.69A17.9 17.9 0 0 1 12 22.07V20a16 16 0 0 0 4.71-11.34A16 16 0 0 0 12 2v2.1z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+    margin-top: auto;
+    transition: background-color 0.3s ease;
+  }
+
+  .dark-theme .site-footer {
+    background: var(--bg-secondary);
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .footer-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+
+  .footer-text {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .dark-theme .footer-text {
+    color: #6e7681;
+  }
+
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .social-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    transition: all 0.2s ease;
+  }
+
+  .dark-theme .social-links a {
+    background: rgba(255, 255, 255, 0.05);
+    color: #8b949e;
+  }
+
+  .social-links a:hover {
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .social-links a svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 600px) {
+    .social-links a {
+      width: 36px;
+      height: 36px;
+    }
+
+    .social-links a svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+</style>
+
+  </div>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+  </button>
+
+  <script>
+    const progressBar = document.getElementById('progressBar');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = Math.min((scrollTop / scrollHeight) * 100, 100);
+      progressBar.style.width = progress + '%';
+
+      if (window.pageYOffset > 500) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Page load animation
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('loaded');
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href === '#') return;
+          const target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

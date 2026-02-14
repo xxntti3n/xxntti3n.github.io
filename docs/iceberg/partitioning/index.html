@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iceberg Partitioning — Hidden Partitioning and Evolution | xxntti3n</title>
+  <meta name="description" content="How Iceberg partitioning works: hidden partitioning, partition specs, transforms, and partition evolution. With SQL and Spark examples.">
+  <meta name="author" content="Tien Nguyen">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Iceberg Partitioning — Hidden Partitioning and Evolution">
+  <meta property="og:description" content="How Iceberg partitioning works: hidden partitioning, partition specs, transforms, and partition evolution. With SQL and Spark examples.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://xxntti3n.github.io/iceberg/partitioning/">
+  <meta property="og:image" content="https://xxntti3n.github.io/assets/og-default.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/atom+xml" title="xxntti3n" href="/feed.xml">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png">
+
+  <!-- Prism for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+  <style>
+    :root {
+      /* Background Colors */
+      --bg-primary: #fafafa;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f5f7f9;
+
+      /* Text Colors */
+      --text-primary: #0d1117;
+      --text-secondary: #3b4252;
+      --text-tertiary: #6e7681;
+
+      /* Accent Colors */
+      --accent: #FF6719;
+      --accent-hover: #e55a15;
+
+      /* Border Colors */
+      --border: #e5e9ef;
+      --border-light: #f0f3f6;
+
+      /* Code Block */
+      --code-bg: #1e1e1e;
+      --quote-bg: #fffbf0;
+      --quote-border: #FF6719;
+
+      /* Link Colors */
+      --link-color: #0969da;
+      --link-hover: #FF6719;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+      /* Gradients */
+      --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #FF6719 100%);
+      --gradient-warm: linear-gradient(135deg, #FF6719 0%, #ff8c42 100%);
+
+      /* Typography */
+      --font-serif: 'Spectral', Georgia, 'Times New Roman', serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+
+      /* Spacing */
+      --max-width: 1200px;
+      --content-width: 700px;
+
+      /* Border Radius */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    /* Dark Theme */
+    .dark-theme {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-tertiary: #6e7681;
+
+      --border: rgba(255, 255, 255, 0.1);
+      --border-light: rgba(255, 255, 255, 0.05);
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+
+      --quote-bg: rgba(255, 103, 25, 0.1);
+      --link-color: #58a6ff;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-serif);
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    ::selection {
+      background: rgba(255, 103, 25, 0.2);
+      color: var(--text-primary);
+    }
+
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    .content-wrapper {
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--gradient-hero);
+      width: 0%;
+      z-index: 1000;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Back to top */
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      background: var(--gradient-hero);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .back-to-top svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Breadcrumbs - compact */
+    .breadcrumbs {
+      padding: 12px 0;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+
+    .breadcrumbs a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .dark-theme .breadcrumbs a {
+      color: #8b949e;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--accent);
+    }
+
+    .breadcrumbs span {
+      color: var(--text-tertiary);
+      margin: 0 8px;
+    }
+
+    .breadcrumbs .current {
+      color: var(--text-tertiary);
+    }
+
+    .article-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      margin-bottom: 16px;
+      transition: color 0.2s ease;
+    }
+
+    .article-back-link:hover {
+      color: var(--accent);
+    }
+
+    /* Article Layout - cleaner, less stuffed */
+    .article-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      padding: 24px 24px 48px;
+    }
+
+    @media (max-width: 1024px) {
+      .article-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 20px 20px 40px;
+      }
+    }
+
+    /* Article Header - compact */
+    .article-header {
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .article-title {
+      font-family: var(--font-serif);
+      font-size: clamp(26px, 3.5vw, 38px);
+      font-weight: 700;
+      line-height: 1.25;
+      margin: 0 0 12px;
+      color: var(--text-primary);
+    }
+
+    .article-subtitle {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      margin: 0 0 20px 0;
+    }
+
+    .article-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      align-items: center;
+    }
+
+    .article-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .article-author-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .article-author-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .article-author-name {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .article-date {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .article-reading-time {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Article Content */
+    .article-content {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-primary);
+    }
+
+    .article-content h1 {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 700;
+      margin: 32px 0 20px;
+      padding-bottom: 12px;
+    }
+
+    .article-content h2 {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 600;
+      margin: 28px 0 16px;
+      padding-bottom: 8px;
+      scroll-margin-top: 80px;
+    }
+
+    .article-content h3 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      scroll-margin-top: 80px;
+    }
+
+    .article-content h4 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      margin: 20px 0 12px;
+    }
+
+    .article-content p {
+      margin-bottom: 16px;
+    }
+
+    .article-content ul, .article-content ol {
+      margin: 16px 0;
+      padding-left: 24px;
+      line-height: 1.8;
+    }
+
+    .article-content li {
+      margin-bottom: 8px;
+    }
+
+    .article-content a {
+      color: var(--link-color);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .article-content a:hover {
+      border-bottom-color: var(--link-hover);
+    }
+
+    /* Code Blocks */
+    .article-content pre {
+      background: var(--code-bg);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 20px 0;
+      overflow-x: auto;
+      max-width: 100%;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .article-content pre code {
+      font-size: inherit;
+      background: transparent;
+      padding: 0;
+    }
+
+    .article-content code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      background: var(--bg-tertiary);
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .dark-theme .article-content code {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Blockquote */
+    .article-content blockquote {
+      background: var(--quote-bg);
+      border-left: 4px solid var(--quote-border);
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: var(--radius-sm);
+    }
+
+    .article-content blockquote strong {
+      color: var(--text-primary);
+    }
+
+    /* Inline Code */
+    .article-content p code,
+    .article-content li code {
+      background: var(--bg-tertiary);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    .dark-theme .article-content p code,
+    .dark-theme .article-content li code {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Diagrams */
+    .article-content pre.mermaid {
+      background: transparent;
+      padding: 0;
+      text-align: center;
+    }
+
+    /* TOC Sidebar - slimmer */
+    .toc-sidebar {
+      position: sticky;
+      top: 88px;
+      height: fit-content;
+      align-self: start;
+    }
+
+    @media (max-width: 1024px) {
+      .toc-sidebar {
+        position: static;
+        margin-bottom: 24px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    .toc-title {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-tertiary);
+      margin: 0 0 16px;
+    }
+
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc-list li {
+      margin-bottom: 6px;
+    }
+
+    .toc-list a {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: block;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .dark-theme .toc-list a {
+      color: #8b949e;
+    }
+
+    .toc-list a:hover,
+    .toc-list a.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-left-color: var(--accent);
+    }
+
+    .dark-theme .toc-list a:hover,
+    .dark-theme .toc-list a.active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Author Bio - compact */
+    .author-bio {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 32px 0 24px;
+    }
+
+    .dark-theme .author-bio {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .author-bio h3 {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .author-bio p {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Subscribe Box - neutral, no color theme */
+    .subscribe-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+
+    .dark-theme .subscribe-box {
+      background: var(--bg-tertiary);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .subscribe-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+
+    .subscribe-box-text {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 16px;
+    }
+
+    .subscribe-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+
+    .subscribe-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .subscribe-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .subscribe-btn {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .subscribe-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .subscribe-terms {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 10px;
+    }
+
+    /* Share Buttons */
+    .share-section {
+      margin: 24px 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .share-title {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 16px;
+    }
+
+    .share-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .dark-theme .share-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .share-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .share-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .article-layout {
+        padding: 20px 16px 40px;
+      }
+
+      .article-title {
+        font-size: 28px;
+      }
+
+      .article-subtitle {
+        font-size: 16px;
+      }
+
+      .article-content h1 {
+        font-size: 28px;
+        margin: 24px 0 16px;
+      }
+
+      .article-content h2 {
+        font-size: 22px;
+        margin: 20px 0 16px;
+      }
+
+      .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="page-wrapper">
+    <header class="site-header" id="siteHeader">
+  <div class="site-header-content">
+    <a href="/" class="site-logo">
+      <img src="/assets/images/logo-writing-book.svg" alt="" class="site-logo-icon" width="36" height="36">
+      <span class="site-logo-text">xxntti3n</span>
+    </a>
+
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+    </button>
+
+    <nav class="site-nav" id="siteNav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/kubernetes/" class="nav-link">Kubernetes</a>
+      <a href="/iceberg/" class="nav-link">Iceberg</a>
+      <a href="/about/" class="nav-link">About</a>
+      <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="nav-link nav-link--external">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+
+      <!-- Dark mode toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="theme-icon sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="theme-icon moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const siteNav = document.getElementById('siteNav');
+    const siteHeader = document.getElementById('siteHeader');
+
+    mobileMenuToggle.addEventListener('click', () => {
+      mobileMenuToggle.classList.toggle('active');
+      siteNav.classList.toggle('active');
+      document.body.style.overflow = siteNav.classList.contains('active') ? 'hidden' : '';
+    });
+
+    // Close menu when clicking a link
+    document.querySelectorAll('.site-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenuToggle.classList.remove('active');
+        siteNav.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!siteHeader.contains(e.target) && siteNav.classList.contains('active')) {
+        mobileMenuToggle.classList.remove('active');
+        siteNav.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Dark mode toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const sunIcon = themeToggle.querySelector('.sun');
+    const moonIcon = themeToggle.querySelector('.moon');
+
+    // Check for saved theme; default to light for consistent UI
+    const savedTheme = localStorage.getItem('theme');
+    const currentTheme = savedTheme || 'light';
+
+    if (currentTheme === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark-theme');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      sunIcon.style.display = isDark ? 'none' : 'block';
+      moonIcon.style.display = isDark ? 'block' : 'none';
+    });
+  </script>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+  }
+
+  .dark-theme .site-header {
+    background: rgba(13, 17, 23, 0.95);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .site-header-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .site-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .site-logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: block;
+    object-fit: contain;
+    /* Logo is black; invert in dark theme so it stays visible */
+  }
+
+  .dark-theme .site-logo-icon {
+    filter: invert(1) brightness(1.1);
+  }
+
+  .site-logo-text {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  .dark-theme .site-logo-text {
+    color: #f0f6fc;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 101;
+  }
+
+  .mobile-menu-toggle .hamburger {
+    width: 24px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .dark-theme .mobile-menu-toggle .hamburger {
+    background: #f0f6fc;
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle.active .hamburger:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .site-nav .nav-link {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dark-theme .site-nav .nav-link {
+    color: #8b949e;
+  }
+
+  .site-nav .nav-link:hover {
+    color: var(--accent);
+  }
+
+  .site-nav .nav-link--external {
+    opacity: 0.8;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+  }
+
+  .dark-theme .theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f0f6fc;
+  }
+
+  .theme-toggle:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-menu-toggle {
+      display: flex;
+    }
+
+    .site-nav {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+
+    .dark-theme .site-nav {
+      background: #0d1117;
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-nav.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .site-nav .nav-link {
+      padding: 14px 0;
+      font-size: 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .dark-theme .site-nav .nav-link {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-nav .nav-link:last-child {
+      border-bottom: none;
+    }
+
+    .theme-toggle {
+      margin-top: 16px;
+      width: 100%;
+      height: 44px;
+    }
+  }
+</style>
+
+
+    <div class="container" style="padding-top: 20px;">
+      
+      
+      <a href="/iceberg/" class="article-back-link">← Back to Iceberg</a>
+      
+      <nav class="breadcrumbs" aria-label="Breadcrumb" style="padding-bottom: 8px;">
+        <a href="/">Home</a>
+        <span>/</span>
+        
+        
+        <a href="/iceberg/">Iceberg</a>
+        <span>/</span>
+        
+        <span class="current">Iceberg Partitioning — Hidden Partitioning and Evolution</span>
+      </nav>
+    </div>
+
+    <main class="article-layout">
+      <!-- TOC Sidebar -->
+      
+      <aside class="toc-sidebar">
+        <div class="toc-title">Table of Contents</div>
+        <nav class="toc-list" id="tocList">
+          <!-- TOC items will be generated by JavaScript -->
+        </nav>
+      </aside>
+      
+
+      <!-- Article Content -->
+      <article>
+        <header class="article-header">
+          <h1 class="article-title">Iceberg Partitioning — Hidden Partitioning and Evolution</h1>
+          
+          <div class="article-meta">
+            <div class="article-author">
+              <div class="article-author-avatar">TN</div>
+              <div class="article-author-info">
+                <span class="article-author-name">Tien Nguyen</span>
+                <span class="article-date">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <path d="M16 2v4M12 5l7 7"/>
+                  </svg>
+                  Feb 17, 2025
+                </span>
+              </div>
+            </div>
+            
+            <span class="article-reading-time">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              11 min read
+            </span>
+            
+          </div>
+        </header>
+
+        <div class="article-content">
+          <p>Iceberg partitioning speeds up queries by grouping rows into files by partition value. Unlike Hive, Iceberg uses <strong>hidden partitioning</strong>: you define transforms (e.g. day(ts)) in the table spec; writers and readers don’t manage partition columns by hand, and you can <strong>evolve</strong> the partition spec without rewriting the whole table.</p>
+
+<hr />
+
+<h2 id="1-why-hidden-partitioning">1. Why “hidden” partitioning?</h2>
+
+<p>In Hive-style tables you must:</p>
+
+<ul>
+  <li>Add an explicit partition column (e.g. <code class="language-plaintext highlighter-rouge">event_date</code>) and populate it correctly on write.</li>
+  <li>Remember to filter on that column in every query; otherwise you get full scans.</li>
+</ul>
+
+<p>In Iceberg:</p>
+
+<ul>
+  <li>You partition by <strong>transforms</strong> on columns (e.g. <code class="language-plaintext highlighter-rouge">day(event_time)</code>). There is no separate partition column in the row.</li>
+  <li>The engine derives partition values from the data and records them in metadata.</li>
+  <li>The engine <strong>translates</strong> predicates (e.g. <code class="language-plaintext highlighter-rouge">event_time BETWEEN ...</code>) into partition filters and skips files automatically.</li>
+</ul>
+
+<p>So: no manual partition column, no silent bugs from wrong format or missing filters, and partition layout can change over time (partition evolution).</p>
+
+<hr />
+
+<h2 id="2-partition-transforms">2. Partition transforms</h2>
+
+<p>Common transforms:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Transform</th>
+      <th>Source type</th>
+      <th>Example partition value</th>
+      <th>Use case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">identity</code></td>
+      <td>any</td>
+      <td>same as column</td>
+      <td>Category, region</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">year(ts)</code></td>
+      <td>timestamp/date</td>
+      <td><code class="language-plaintext highlighter-rouge">2024</code></td>
+      <td>Coarse time</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">month(ts)</code></td>
+      <td>timestamp/date</td>
+      <td><code class="language-plaintext highlighter-rouge">2024-01</code></td>
+      <td>Monthly rollups</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">day(ts)</code></td>
+      <td>timestamp/date</td>
+      <td><code class="language-plaintext highlighter-rouge">2024-01-15</code></td>
+      <td>Daily tables</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">hour(ts)</code></td>
+      <td>timestamp</td>
+      <td><code class="language-plaintext highlighter-rouge">2024-01-15T10</code></td>
+      <td>Event streams</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">bucket(n, col)</code></td>
+      <td>any</td>
+      <td><code class="language-plaintext highlighter-rouge">0..n-1</code></td>
+      <td>Skew reduction</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">truncate(l, col)</code></td>
+      <td>string/int</td>
+      <td>truncated value</td>
+      <td>Prefix grouping</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Example: partition by day of <code class="language-plaintext highlighter-rouge">event_time</code> and by <code class="language-plaintext highlighter-rouge">level</code>:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">logs</span> <span class="p">(</span>
+  <span class="n">id</span> <span class="nb">BIGINT</span><span class="p">,</span>
+  <span class="n">event_time</span> <span class="nb">TIMESTAMP</span><span class="p">,</span>
+  <span class="k">level</span> <span class="n">STRING</span><span class="p">,</span>
+  <span class="n">message</span> <span class="n">STRING</span>
+<span class="p">)</span>
+<span class="k">USING</span> <span class="n">iceberg</span>
+<span class="n">PARTITIONED</span> <span class="k">BY</span> <span class="p">(</span><span class="n">days</span><span class="p">(</span><span class="n">event_time</span><span class="p">),</span> <span class="k">level</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Writes only need <code class="language-plaintext highlighter-rouge">event_time</code> and <code class="language-plaintext highlighter-rouge">level</code>; partition values are derived. Queries like <code class="language-plaintext highlighter-rouge">WHERE event_time BETWEEN '2024-01-01' AND '2024-01-07'</code> are used to prune partitions automatically.</p>
+
+<p><em>Suggested image: diagram of table layout with data/date=2024-01-01/level=ERROR/ and files inside.</em></p>
+
+<hr />
+
+<h2 id="3-partition-spec-in-metadata">3. Partition spec in metadata</h2>
+
+<p>The table’s partition spec is stored in metadata (with a partition-spec-id). Each data file’s manifest entry includes partition values for that spec. When you <strong>evolve</strong> the partition spec (e.g. add a new partition field), new writes use the new spec; old data keeps its old spec. No full table rewrite required.</p>
+
+<hr />
+
+<h2 id="4-partition-evolution-example">4. Partition evolution example</h2>
+
+<p>Start with daily partitioning:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- Initial: partition by day</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">events</span> <span class="p">(</span><span class="n">id</span> <span class="nb">BIGINT</span><span class="p">,</span> <span class="n">ts</span> <span class="nb">TIMESTAMP</span><span class="p">,</span> <span class="n">name</span> <span class="n">STRING</span><span class="p">)</span>
+<span class="k">USING</span> <span class="n">iceberg</span>
+<span class="n">PARTITIONED</span> <span class="k">BY</span> <span class="p">(</span><span class="n">days</span><span class="p">(</span><span class="n">ts</span><span class="p">));</span>
+</code></pre></div></div>
+
+<p>Later, add monthly partitioning (e.g. for a new rollup). In Spark 3.x with Iceberg:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">events</span> <span class="k">ADD</span> <span class="k">PARTITION</span> <span class="n">FIELD</span> <span class="n">months</span><span class="p">(</span><span class="n">ts</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>New data will be written with both <code class="language-plaintext highlighter-rouge">day(ts)</code> and <code class="language-plaintext highlighter-rouge">month(ts)</code>; existing data stays day-only. Queries can still filter on <code class="language-plaintext highlighter-rouge">ts</code>; the engine uses whatever partition info exists per file.</p>
+
+<hr />
+
+<h2 id="5-best-practices">5. Best practices</h2>
+
+<ul>
+  <li><strong>Time-based</strong>: Prefer <code class="language-plaintext highlighter-rouge">days(ts)</code> or <code class="language-plaintext highlighter-rouge">hours(ts)</code> for event/log tables so range queries prune well.</li>
+  <li><strong>High cardinality</strong>: Add <code class="language-plaintext highlighter-rouge">bucket(n, id)</code> (or similar) to avoid too many small partitions.</li>
+  <li><strong>Evolution</strong>: Prefer adding new partition fields over changing existing ones so old data remains valid.</li>
+</ul>
+
+<hr />
+
+<h2 id="6-summary">6. Summary</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Concept</th>
+      <th>Iceberg behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Partition value</td>
+      <td>Derived by transform; not a physical column</td>
+    </tr>
+    <tr>
+      <td>Predicate pushdown</td>
+      <td>Engine maps column predicates to partition pruning</td>
+    </tr>
+    <tr>
+      <td>Evolution</td>
+      <td>New spec for new writes; old data unchanged</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For how these partitions are stored in manifests and data paths, see <a href="/iceberg/table-metadata-file-layout/">Table Metadata and File Layout</a>. For versioning and rollback of table state, see <a href="/iceberg/snapshots-time-travel/">Snapshots and Time Travel</a>.</p>
+
+        </div>
+
+        <!-- Share Section -->
+        <div class="share-section">
+          <div class="share-title">Share this article</div>
+          <div class="share-buttons">
+            <a href="https://twitter.com/intent/tweet?text=Iceberg+Partitioning+%E2%80%94+Hidden+Partitioning+and+Evolution&url=https://xxntti3n.github.io%2Ficeberg%2Fpartitioning%2F" target="_blank" rel="noopener" class="share-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-2.684 8.016h-2.588l2.348-7.288h-4.016l-3.328 12h6.624l2.184-7.288h4.516l-2.684-8.016h-3.544l-2.5 8.016h-3.568l-2.268 8.016h3.544l2.5-8.016h3.56l2.268-8.016h-3.544z"/>
+              </svg>
+              Twitter
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://xxntti3n.github.io%2Ficeberg%2Fpartitioning%2F" target="_blank" rel="noopener" class="share-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              LinkedIn
+            </a>
+            <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" class="share-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- Author Bio -->
+        <div class="author-bio">
+          <h3>About the Author</h3>
+          <p><strong>Tien Nguyen</strong> is a software engineer exploring distributed systems, cloud infrastructure, and developer tools. Writes about production learnings and technical deep dives across cloud-native platforms, container orchestration, and modern software development practices.</p>
+        </div>
+
+        <!-- Subscribe Box -->
+        <div class="subscribe-box">
+          <h3 class="subscribe-title">Enjoyed this article?</h3>
+          <p class="subscribe-box-text">Subscribe to get weekly technical guides and engineering insights delivered to your inbox. No spam, just signal.</p>
+          <form class="subscribe-form" id="subscribeForm">
+            <input type="email" placeholder="your@email.com" required class="subscribe-input">
+            <button type="submit" class="subscribe-btn">Subscribe</button>
+          </form>
+          <p class="subscribe-terms">By subscribing, you agree to receive emails. Unsubscribe anytime.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+  <div class="footer-content">
+    <p class="footer-text">&copy; 2026 xxntti3n. Built with <a href="https://jekyllrb.com/" style="color: inherit;">Jekyll</a> & <a href="https://pages.github.com/" style="color: inherit;">GitHub Pages</a>.</p>
+    <div class="social-links">
+      <a href="https://linkedin.com/in/xxntti3n" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+      </a>
+      <a href="https://github.com/xxntti3n" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.236 3.221-1.236 4.608 0 2.807 1.803 5.626 5.469 5.921-.43.372-.823 1.102-.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+      </a>
+      <a href="/feed.xml" aria-label="RSS Feed">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.43 7.39 20.4 6.18 20.4a2.18 2.18 0 0 1-2.18-2.18c0-1.21.97-2.18 2.18-2.18zM2 10.1a12 12 0 0 1 12 12 12 12 0 0 1 3.53-8.43 12 12 0 0 1-3.53-8.43H12A10 10 0 0 0 2 10.1zm0-5.9a17.9 17.9 0 0 1 17.9 17.9 17.9 17.9 0 0 1 5.27 12.69A17.9 17.9 0 0 1 12 22.07V20a16 16 0 0 0 4.71-11.34A16 16 0 0 0 12 2v2.1z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+    margin-top: auto;
+    transition: background-color 0.3s ease;
+  }
+
+  .dark-theme .site-footer {
+    background: var(--bg-secondary);
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .footer-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+
+  .footer-text {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .dark-theme .footer-text {
+    color: #6e7681;
+  }
+
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .social-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    transition: all 0.2s ease;
+  }
+
+  .dark-theme .social-links a {
+    background: rgba(255, 255, 255, 0.05);
+    color: #8b949e;
+  }
+
+  .social-links a:hover {
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .social-links a svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 600px) {
+    .social-links a {
+      width: 36px;
+      height: 36px;
+    }
+
+    .social-links a svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+</style>
+
+  </div>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+  </button>
+
+  <script>
+    // Progress bar
+    const progressBar = document.getElementById('progressBar');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', function() {
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = Math.min((scrollTop / scrollHeight) * 100, 100);
+      progressBar.style.width = progress + '%';
+
+      if (window.pageYOffset > 500) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    backToTop.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Generate Table of Contents
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('tocList');
+      const content = document.querySelector('.article-content');
+
+      if (!tocList || !content) return;
+
+      const headings = content.querySelectorAll('h2');
+      let sectionNumber = 1;
+
+      headings.forEach(function(heading) {
+        // Add ID to heading if missing
+        if (!heading.id) {
+          const text = heading.textContent.trim();
+          const baseId = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          heading.id = baseId || 'section-' + sectionNumber;
+        }
+
+        // Create TOC item
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent.trim();
+        li.appendChild(a);
+        tocList.appendChild(li);
+
+        sectionNumber++;
+      });
+
+      // Active state on scroll
+      const tocLinks = tocList.querySelectorAll('a');
+      window.addEventListener('scroll', function() {
+        let current = '';
+        headings.forEach(function(heading) {
+          const sectionTop = heading.offsetTop;
+          if (window.pageYOffset >= sectionTop - 150) {
+            current = heading.id;
+          }
+        });
+
+        tocLinks.forEach(function(link) {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + current) {
+            link.classList.add('active');
+          }
+        });
+      });
+    });
+
+    // Subscribe form
+    const subscribeForm = document.getElementById('subscribeForm');
+    if (subscribeForm) {
+      subscribeForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Thanks for subscribing!');
+      });
+    }
+  </script>
+</body>
+</html>
